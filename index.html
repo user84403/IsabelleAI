@@ -6,17 +6,45 @@
   <title>Isabelle AI</title>
   <style>
     :root{
+      --accent:#FD2B2B;
+      --accent2:#ff4d4d;
+      --shadow: 0 18px 60px rgba(0,0,0,.18);
+      --radius:18px;
+
+      /* dark default */
       --bg:#070A0F;
       --panel:#0B1020;
       --panel2:#0A0E1A;
       --border:#1B2440;
       --text:#E9EEFF;
       --muted:#A7B0D6;
-      --accent:#FD2B2B;
-      --accent2:#ff4d4d;
-      --shadow: 0 18px 60px rgba(0,0,0,.55);
-      --radius:18px;
+      --bgGlow1: rgba(253,43,43,.10);
+      --bgGlow2: rgba(255,255,255,.05);
+      --bgGlow3: rgba(253,43,43,.08);
+      --status:#35d07f;
+      --inputBg: rgba(7,10,15,.55);
+      --bubbleBg: rgba(10,14,26,.75);
+      --bubbleMeBg: rgba(253,43,43,.08);
+      --bubbleMeBorder: rgba(253,43,43,.35);
     }
+
+    /* light mode overrides */
+    [data-theme="light"]{
+      --bg:#F6F7FB;
+      --panel:#FFFFFF;
+      --panel2:#FFFFFF;
+      --border:#E3E7F3;
+      --text:#0B1020;
+      --muted:#56607A;
+      --bgGlow1: rgba(253,43,43,.08);
+      --bgGlow2: rgba(11,16,32,.04);
+      --bgGlow3: rgba(253,43,43,.06);
+      --status:#1ea45b;
+      --inputBg: rgba(255,255,255,.85);
+      --bubbleBg: rgba(246,247,251,.95);
+      --shadow: 0 18px 60px rgba(11,16,32,.10);
+    }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -24,9 +52,9 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
-        radial-gradient(900px 600px at 15% 10%, rgba(253,43,43,.10), transparent 60%),
-        radial-gradient(800px 500px at 85% 15%, rgba(255,255,255,.05), transparent 55%),
-        radial-gradient(900px 700px at 50% 110%, rgba(253,43,43,.08), transparent 60%),
+        radial-gradient(900px 600px at 15% 10%, var(--bgGlow1), transparent 60%),
+        radial-gradient(800px 500px at 85% 15%, var(--bgGlow2), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, var(--bgGlow3), transparent 60%),
         var(--bg);
     }
 
@@ -89,10 +117,53 @@
       gap:8px;
       align-items:center;
     }
+    [data-theme="light"] .pill{
+      background:rgba(11,16,32,.03);
+    }
     .status{
       width:8px;height:8px;border-radius:50%;
-      background:#35d07f;
-      box-shadow:0 0 18px rgba(53,208,127,.35);
+      background:var(--status);
+      box-shadow:0 0 18px rgba(53,208,127,.25);
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .toggle input{
+      appearance:none;
+      width:44px;
+      height:26px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      position:relative;
+      outline:none;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+    [data-theme="light"] .toggle input{
+      background:rgba(11,16,32,.05);
+    }
+    .toggle input::after{
+      content:"";
+      position:absolute;
+      top:3px; left:3px;
+      width:20px; height:20px;
+      border-radius:50%;
+      background:var(--text);
+      opacity:.9;
+      transition:.2s ease;
+    }
+    .toggle input:checked{
+      border-color: rgba(253,43,43,.55);
+      box-shadow:0 0 0 4px rgba(253,43,43,.10);
+    }
+    .toggle input:checked::after{
+      left:21px;
+      background:white;
     }
 
     .panel{
@@ -105,6 +176,9 @@
       min-height: 70vh;
       display:flex;
       flex-direction:column;
+    }
+    [data-theme="light"] .panel{
+      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
     }
 
     .messages{
@@ -128,36 +202,42 @@
       font-size:12px;
       color:var(--muted);
     }
+    [data-theme="light"] .avatar{
+      background:rgba(11,16,32,.03);
+    }
     .bubble{
       max-width: 78ch;
       border:1px solid var(--border);
       border-radius:16px;
       padding:12px 14px;
-      background:rgba(10,14,26,.75);
+      background:var(--bubbleBg);
       line-height:1.35;
       white-space:pre-wrap;
       word-wrap:break-word;
     }
     .me .bubble{
-      background:rgba(253,43,43,.08);
-      border-color: rgba(253,43,43,.35);
+      background:var(--bubbleMeBg);
+      border-color: var(--bubbleMeBorder);
     }
     .me{
       flex-direction:row-reverse;
     }
     .me .avatar{
       color:#ffd4d4;
-      border-color: rgba(253,43,43,.35);
+      border-color: var(--bubbleMeBorder);
       background:rgba(253,43,43,.10);
     }
 
     .composer{
       border-top:1px solid var(--border);
-      background:rgba(0,0,0,.18);
+      background:rgba(0,0,0,.10);
       padding:14px;
       display:flex;
       gap:10px;
       align-items:flex-end;
+    }
+    [data-theme="light"] .composer{
+      background:rgba(11,16,32,.03);
     }
     textarea{
       width:100%;
@@ -167,7 +247,7 @@
       padding:12px 12px;
       border-radius:14px;
       border:1px solid var(--border);
-      background:rgba(7,10,15,.55);
+      background:var(--inputBg);
       color:var(--text);
       outline:none;
       line-height:1.35;
@@ -203,14 +283,12 @@
       border-bottom:1px dotted rgba(167,176,214,.35);
     }
     .smalllink:hover{color:var(--text)}
-    .hint{
-      opacity:.9;
-    }
+    .hint{opacity:.9}
 
     @media (max-width:640px){
       .bubble{max-width: 46ch}
       header{flex-direction:column; align-items:flex-start}
-      .meta{width:100%; justify-content:space-between}
+      .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
       .panel{min-height: 76vh}
     }
   </style>
@@ -233,6 +311,12 @@
             <span class="status"></span>
             <span id="statusText">ready</span>
           </div>
+
+          <div class="pill toggle" title="toggle light/dark">
+            <span id="themeLabel">dark</span>
+            <input id="themeToggle" type="checkbox" aria-label="toggle theme" />
+          </div>
+
           <div class="pill" title="clears the chat on this device only">
             <a class="smalllink" href="#" id="clearChat">clear chat</a>
           </div>
@@ -256,8 +340,7 @@
   </div>
 
   <script>
-    // later: replace this with your real backend endpoint (edge function / api)
-    const CHAT_ENDPOINT = ""; // example: "https://YOUR_DOMAIN/functions/v1/chat"
+    const CHAT_ENDPOINT = ""; // later: add your backend endpoint here
 
     const messagesEl = document.getElementById("messages");
     const inputEl = document.getElementById("input");
@@ -266,13 +349,35 @@
     const clearChatEl = document.getElementById("clearChat");
     const exportChatEl = document.getElementById("exportChat");
 
+    const themeToggle = document.getElementById("themeToggle");
+    const themeLabel = document.getElementById("themeLabel");
+    const THEME_KEY = "isabelle_ai_theme";
+
     const STORAGE_KEY = "isabelle_ai_chat_v1";
     let history = loadHistory();
 
     function setStatus(text){ statusText.textContent = text; }
-
     function escapeHtml(str){
       return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function setTheme(theme){
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(THEME_KEY, theme);
+      const isLight = theme === "light";
+      themeToggle.checked = isLight;
+      themeLabel.textContent = isLight ? "light" : "dark";
+    }
+
+    function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      if(saved === "light" || saved === "dark"){
+        setTheme(saved);
+        return;
+      }
+      // default to system preference if no saved theme
+      const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+      setTheme(prefersLight ? "light" : "dark");
     }
 
     function addMessage(role, text){
@@ -330,11 +435,10 @@
       sendBtn.disabled = true;
       setStatus("thinking...");
 
-      // if no backend yet, simulate a placeholder response
       if(!CHAT_ENDPOINT){
         const placeholder =
           "Backend not connected yet.\n" +
-          "When you’re ready, you’ll paste your chat endpoint into CHAT_ENDPOINT in the code, and this will become the real Isabelle AI.";
+          "Paste your real chat endpoint into CHAT_ENDPOINT in the code, then this will become the real Isabelle AI.";
         addMessage("assistant", placeholder);
         history.push({ role:"assistant", content:placeholder });
         saveHistory();
@@ -373,7 +477,6 @@
       }
     }
 
-    // autosize textarea
     function autosize(){
       inputEl.style.height = "0px";
       inputEl.style.height = Math.min(160, inputEl.scrollHeight) + "px";
@@ -408,9 +511,15 @@
       URL.revokeObjectURL(url);
     });
 
+    themeToggle.addEventListener("change", () => {
+      setTheme(themeToggle.checked ? "light" : "dark");
+    });
+
+    initTheme();
     renderHistory();
     autosize();
     setStatus("ready");
   </script>
 </body>
 </html>
+
