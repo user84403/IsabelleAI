@@ -8,8 +8,7 @@
   <style>
     :root{
       --accent:#FD2B2B;
-      --accent2:#ff4d4d;
-      --shadow: 0 18px 60px rgba(0,0,0,.18);
+      --shadow: 0 18px 60px rgba(0,0,0,.25);
       --radius:18px;
 
       --bg:#070A0F;
@@ -33,7 +32,7 @@
       --status:#1ea45b;
       --inputBg: rgba(255,255,255,.85);
       --bubbleBg: rgba(246,247,251,.95);
-      --shadow: 0 18px 60px rgba(11,16,32,.10);
+      --shadow: 0 18px 60px rgba(11,16,32,.12);
     }
 
     *{box-sizing:border-box}
@@ -41,8 +40,8 @@
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      color:var(--text);
       background:var(--bg);
+      color:var(--text);
     }
 
     .wrap{
@@ -53,7 +52,7 @@
     }
 
     .chat-shell{
-      width:min(980px, 100%);
+      width:min(980px,100%);
       display:flex;
       flex-direction:column;
       gap:14px;
@@ -63,8 +62,8 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:16px;
       padding:12px 6px;
+      gap:16px;
     }
 
     .brand{
@@ -74,45 +73,48 @@
     }
 
     .brandpic{
-      width:42px;
-      height:42px;
-      border-radius:14px;
+      width:44px;
+      height:44px;
+      border-radius:50%;
       object-fit:cover;
+      object-position:center top;
       border:1px solid var(--border);
-      box-shadow: 0 14px 34px rgba(0,0,0,.25);
+      box-shadow:var(--shadow);
     }
 
     h1{
-      font-size:20px;
       margin:0;
+      font-size:20px;
       font-weight:700;
     }
 
     .sub{
       font-size:13px;
       color:var(--muted);
-      margin-top:3px;
+      margin-top:2px;
     }
 
     .meta{
       display:flex;
-      gap:10px;
       align-items:center;
+      gap:10px;
       font-size:13px;
       color:var(--muted);
     }
 
     .pill{
       padding:8px 10px;
-      border:1px solid var(--border);
       border-radius:999px;
+      border:1px solid var(--border);
       display:flex;
       align-items:center;
       gap:8px;
     }
 
     .status{
-      width:8px;height:8px;border-radius:50%;
+      width:8px;
+      height:8px;
+      border-radius:50%;
       background:var(--status);
     }
 
@@ -129,28 +131,32 @@
     .toggle input::after{
       content:"";
       position:absolute;
-      top:3px;left:3px;
-      width:20px;height:20px;
+      top:3px;
+      left:3px;
+      width:20px;
+      height:20px;
       border-radius:50%;
       background:var(--text);
-      transition:.2s;
+      transition:.2s ease;
     }
 
-    .toggle input:checked::after{ left:21px }
+    .toggle input:checked::after{
+      left:21px;
+    }
 
     .panel{
       flex:1;
       border:1px solid var(--border);
       border-radius:var(--radius);
-      overflow:hidden;
       display:flex;
       flex-direction:column;
+      overflow:hidden;
     }
 
     .messages{
+      flex:1;
       padding:18px;
       overflow:auto;
-      flex:1;
     }
 
     .msg{
@@ -159,33 +165,43 @@
       margin:12px 0;
     }
 
+    .me{
+      flex-direction:row-reverse;
+    }
+
     .avatar{
-      width:34px;height:34px;
-      border-radius:12px;
+      width:36px;
+      height:36px;
+      border-radius:50%;
       border:1px solid var(--border);
       display:flex;
       align-items:center;
       justify-content:center;
       overflow:hidden;
       flex:0 0 auto;
+      font-size:12px;
+      font-weight:700;
+      color:var(--muted);
     }
 
     .avatar img{
-      width:100%;
-      height:100%;
+      width:108%;
+      height:108%;
       object-fit:cover;
+      object-position:center top;
+      border-radius:50%;
     }
 
     .bubble{
-      max-width: 78ch;
-      border:1px solid var(--border);
-      border-radius:16px;
+      max-width:78ch;
       padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--border);
       background:var(--bubbleBg);
       white-space:pre-wrap;
+      line-height:1.35;
     }
 
-    .me{ flex-direction:row-reverse }
     .me .bubble{
       background:var(--bubbleMeBg);
       border-color:var(--bubbleMeBorder);
@@ -207,6 +223,7 @@
       border:1px solid var(--border);
       background:var(--inputBg);
       color:var(--text);
+      font-size:14px;
     }
 
     button{
@@ -227,7 +244,7 @@
 
       <header>
         <div class="brand">
-          <img class="brandpic" src="./isabelle.png" alt="Isabelle">
+          <img src="./isabelle.png" class="brandpic" alt="Isabelle">
           <div>
             <h1>Isabelle AI</h1>
             <div class="sub">Ask anything about the program</div>
@@ -237,9 +254,8 @@
         <div class="meta">
           <div class="pill">
             <span class="status"></span>
-            <span id="statusText">ready</span>
+            <span>ready</span>
           </div>
-
           <div class="pill toggle">
             <span id="themeLabel">dark</span>
             <input id="themeToggle" type="checkbox">
@@ -260,16 +276,15 @@
   </div>
 
   <script>
-    const messagesEl = document.getElementById("messages");
-    const inputEl = document.getElementById("input");
+    const messages = document.getElementById("messages");
+    const input = document.getElementById("input");
     const sendBtn = document.getElementById("send");
-    const statusText = document.getElementById("statusText");
     const themeToggle = document.getElementById("themeToggle");
     const themeLabel = document.getElementById("themeLabel");
 
     function addMessage(role, text){
       const row = document.createElement("div");
-      row.className = "msg " + (role === "user" ? "me" : "");
+      row.className = "msg" + (role === "user" ? " me" : "");
 
       const avatar = document.createElement("div");
       avatar.className = "avatar";
@@ -286,26 +301,26 @@
 
       row.appendChild(avatar);
       row.appendChild(bubble);
-      messagesEl.appendChild(row);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      messages.appendChild(row);
+      messages.scrollTop = messages.scrollHeight;
     }
 
     function send(){
-      const text = inputEl.value.trim();
+      const text = input.value.trim();
       if(!text) return;
-      inputEl.value = "";
+      input.value = "";
       addMessage("user", text);
 
       setTimeout(() => {
         addMessage(
           "assistant",
-          "Backend not connected yet.\nWhen you’re ready, you’ll paste your chat endpoint into CHAT_ENDPOINT in the code, and this will become the real Isabelle AI."
+          "Backend not connected yet.\nWhen you’re ready, you’ll paste your chat endpoint into the code and this will become the real Isabelle AI."
         );
       }, 400);
     }
 
     sendBtn.onclick = send;
-    inputEl.addEventListener("keydown", e => {
+    input.addEventListener("keydown", e => {
       if(e.key === "Enter" && !e.shiftKey){
         e.preventDefault();
         send();
@@ -323,6 +338,7 @@
     };
 
     setTheme("dark");
+
     addMessage(
       "assistant",
       "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to."
@@ -330,5 +346,3 @@
   </script>
 </body>
 </html>
-
-
