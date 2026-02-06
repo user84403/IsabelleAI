@@ -2,55 +2,231 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Isabelle AI</title>
 
   <style>
     :root{
       --accent:#FD2B2B;
+      --accent2:#ff4d4d;
+      --shadow: 0 18px 60px rgba(0,0,0,.18);
+      --radius:18px;
+
+      /* dark default */
       --bg:#070A0F;
       --panel:#0B1020;
+      --panel2:#0A0E1A;
       --border:#1B2440;
       --text:#E9EEFF;
       --muted:#A7B0D6;
-      --bubble:#0E1428;
-      --bubbleUser:#1A1020;
+      --bgGlow1: rgba(253,43,43,.10);
+      --bgGlow2: rgba(255,255,255,.05);
+      --bgGlow3: rgba(253,43,43,.08);
+      --status:#35d07f;
+      --inputBg: rgba(7,10,15,.55);
+      --bubbleBg: rgba(10,14,26,.75);
+      --bubbleMeBg: rgba(253,43,43,.08);
+      --bubbleMeBorder: rgba(253,43,43,.35);
+    }
+
+    /* light mode overrides */
+    [data-theme="light"]{
+      --bg:#F6F7FB;
+      --panel:#FFFFFF;
+      --panel2:#FFFFFF;
+      --border:#E3E7F3;
+      --text:#0B1020;
+      --muted:#56607A;
+      --bgGlow1: rgba(253,43,43,.08);
+      --bgGlow2: rgba(11,16,32,.04);
+      --bgGlow3: rgba(253,43,43,.06);
+      --status:#1ea45b;
+      --inputBg: rgba(255,255,255,.85);
+      --bubbleBg: rgba(246,247,251,.95);
+      --shadow: 0 18px 60px rgba(11,16,32,.10);
     }
 
     *{box-sizing:border-box}
     html,body{height:100%}
-
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
-      display:flex;
-      justify-content:center;
-      padding:24px;
+      background:
+        radial-gradient(900px 600px at 15% 10%, var(--bgGlow1), transparent 60%),
+        radial-gradient(800px 500px at 85% 15%, var(--bgGlow2), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, var(--bgGlow3), transparent 60%),
+        var(--bg);
     }
 
-    .app{
-      width:100%;
-      max-width:900px;
+    .wrap{
+      min-height:100%;
+      display:flex;
+      justify-content:center;
+      padding:28px 18px;
+    }
+
+    .chat-shell{
+      width:min(980px, 100%);
       display:flex;
       flex-direction:column;
-      gap:16px;
+      gap:14px;
     }
 
     header{
       display:flex;
       align-items:center;
-      gap:14px;
+      justify-content:space-between;
+      gap:16px;
+      padding:12px 6px;
     }
 
-    .avatar{
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .brandpic{
       width:44px;
       height:44px;
       border-radius:50%;
-      overflow:hidden;
+      object-fit:cover;
+      object-position:center 18%;
       border:1px solid var(--border);
+      box-shadow: 0 14px 34px rgba(0,0,0,.25);
       flex:0 0 auto;
+    }
+
+    h1{
+      font-size:20px;
+      margin:0;
+      letter-spacing:.2px;
+      font-weight:700;
+    }
+
+    .sub{
+      font-size:13px;
+      color:var(--muted);
+      margin-top:3px;
+    }
+
+    .meta{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .pill{
+      padding:8px 10px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:999px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    [data-theme="light"] .pill{
+      background:rgba(11,16,32,.03);
+    }
+
+    .statusdot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--status);
+      box-shadow:0 0 18px rgba(53,208,127,.25);
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+
+    .toggle input{
+      appearance:none;
+      width:44px;
+      height:26px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      position:relative;
+      outline:none;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    [data-theme="light"] .toggle input{
+      background:rgba(11,16,32,.05);
+    }
+
+    .toggle input::after{
+      content:"";
+      position:absolute;
+      top:3px; left:3px;
+      width:20px; height:20px;
+      border-radius:50%;
+      background:var(--text);
+      opacity:.9;
+      transition:.2s ease;
+    }
+
+    .toggle input:checked{
+      border-color: rgba(253,43,43,.55);
+      box-shadow:0 0 0 4px rgba(253,43,43,.10);
+    }
+
+    .toggle input:checked::after{
+      left:21px;
+      background:white;
+    }
+
+    .panel{
+      flex:1;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      min-height: 70vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    [data-theme="light"] .panel{
+      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
+    }
+
+    .messages{
+      padding:18px;
+      overflow:auto;
+      flex:1;
+    }
+
+    .msg{
+      display:flex;
+      gap:10px;
+      margin:12px 0;
+      align-items:flex-start;
+    }
+
+    .avatar{
+      width:36px;height:36px;border-radius:50%;
+      border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(255,255,255,.03);
+      overflow:hidden;
+      flex:0 0 auto;
+      font-weight:700;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    [data-theme="light"] .avatar{
+      background:rgba(11,16,32,.03);
     }
 
     .avatar img{
@@ -58,117 +234,154 @@
       height:100%;
       object-fit:cover;
       object-position:center 18%;
+      border-radius:50%;
+      display:block;
     }
 
-    h1{
-      margin:0;
-      font-size:20px;
-      font-weight:700;
-    }
-
-    .sub{
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    .panel{
-      flex:1;
-      background:var(--panel);
+    .bubble{
+      max-width: 78ch;
       border:1px solid var(--border);
       border-radius:16px;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
+      padding:12px 14px;
+      background:var(--bubbleBg);
+      line-height:1.35;
+      white-space:pre-wrap;
+      word-wrap:break-word;
     }
 
-    .messages{
-      flex:1;
-      padding:16px;
-      overflow:auto;
-    }
-
-    .msg{
-      display:flex;
-      gap:10px;
-      margin-bottom:14px;
-    }
-
-    .msg.user{
+    .me{
       flex-direction:row-reverse;
     }
 
-    .msg .bubble{
-      background:var(--bubble);
-      border:1px solid var(--border);
-      padding:12px 14px;
-      border-radius:14px;
-      max-width:70%;
-      white-space:pre-wrap;
-      line-height:1.35;
+    .me .bubble{
+      background:var(--bubbleMeBg);
+      border-color: var(--bubbleMeBorder);
     }
 
-    .msg.user .bubble{
-      background:var(--bubbleUser);
-      border-color:#3a1830;
+    .me .avatar{
+      color:#ffd4d4;
+      border-color: var(--bubbleMeBorder);
+      background:rgba(253,43,43,.10);
+      border-radius:14px; /* keep user boxy like before */
     }
 
     .composer{
+      border-top:1px solid var(--border);
+      background:rgba(0,0,0,.10);
+      padding:14px;
       display:flex;
       gap:10px;
-      padding:14px;
-      border-top:1px solid var(--border);
+      align-items:flex-end;
+    }
+
+    [data-theme="light"] .composer{
+      background:rgba(11,16,32,.03);
     }
 
     textarea{
-      flex:1;
+      width:100%;
+      min-height:52px;
+      max-height:160px;
       resize:none;
-      padding:12px;
-      border-radius:12px;
+      padding:12px 12px;
+      border-radius:14px;
       border:1px solid var(--border);
-      background:#050914;
+      background:var(--inputBg);
       color:var(--text);
+      outline:none;
+      line-height:1.35;
       font-size:14px;
     }
 
-    button{
-      padding:12px 16px;
-      border-radius:12px;
-      border:0;
-      background:var(--accent);
-      color:white;
-      font-weight:700;
-      cursor:pointer;
+    textarea:focus{
+      border-color: rgba(253,43,43,.55);
+      box-shadow:0 0 0 4px rgba(253,43,43,.10);
     }
 
-    button:disabled{
-      opacity:.6;
-      cursor:not-allowed;
+    button{
+      border:0;
+      border-radius:14px;
+      padding:12px 16px;
+      background: linear-gradient(180deg, var(--accent2), var(--accent));
+      color:white;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow: 0 14px 34px rgba(253,43,43,.22);
+      white-space:nowrap;
+    }
+
+    button:disabled{opacity:.6; cursor:not-allowed}
+
+    .row2{
+      display:flex;
+      justify-content:space-between;
+      padding:0 14px 14px 14px;
+      color:var(--muted);
+      font-size:12px;
+      gap:14px;
+    }
+
+    .smalllink{
+      color:var(--muted);
+      text-decoration:none;
+      border-bottom:1px dotted rgba(167,176,214,.35);
+    }
+
+    .smalllink:hover{color:var(--text)}
+    .hint{opacity:.9}
+
+    @media (max-width:640px){
+      .bubble{max-width: 46ch}
+      header{flex-direction:column; align-items:flex-start}
+      .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
+      .panel{min-height: 76vh}
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
+  <div class="wrap">
+    <div class="chat-shell">
+      <header>
+        <div class="brand">
+          <img class="brandpic" src="./isabelle.png" alt="Isabelle">
+          <div>
+            <h1>Isabelle AI</h1>
+            <div class="sub">Ask anything about the program</div>
+          </div>
+        </div>
 
-    <header>
-      <div class="avatar">
-        <img src="./isabelle.png" alt="Isabelle">
-      </div>
-      <div>
-        <h1>Isabelle AI</h1>
-        <div class="sub">Ask anything about the program</div>
-      </div>
-    </header>
+        <div class="meta">
+          <div class="pill">
+            <span class="statusdot"></span>
+            <span id="statusText">ready</span>
+          </div>
 
-    <div class="panel">
-      <div class="messages" id="messages"></div>
+          <div class="pill toggle" title="toggle light/dark">
+            <span id="themeLabel">dark</span>
+            <input id="themeToggle" type="checkbox" aria-label="toggle theme" />
+          </div>
 
-      <div class="composer">
-        <textarea id="input" placeholder="Type your question..."></textarea>
-        <button id="send">Send</button>
-      </div>
+          <div class="pill" title="clears the chat on this device only">
+            <a class="smalllink" href="#" id="clearChat">clear chat</a>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="messages" id="messages"></div>
+
+        <div class="composer">
+          <textarea id="input" placeholder="Type your question here..."></textarea>
+          <button id="send">Send</button>
+        </div>
+
+        <div class="row2">
+          <div class="hint">enter to send • shift+enter for a new line</div>
+          <div><a class="smalllink" href="#" id="exportChat">export</a></div>
+        </div>
+      </section>
     </div>
-
   </div>
 
   <script>
@@ -177,18 +390,84 @@
     const messagesEl = document.getElementById("messages");
     const inputEl = document.getElementById("input");
     const sendBtn = document.getElementById("send");
+    const statusText = document.getElementById("statusText");
+    const clearChatEl = document.getElementById("clearChat");
+    const exportChatEl = document.getElementById("exportChat");
+
+    const themeToggle = document.getElementById("themeToggle");
+    const themeLabel = document.getElementById("themeLabel");
+    const THEME_KEY = "isabelle_ai_theme";
+
+    const STORAGE_KEY = "isabelle_ai_chat_v1";
+    let history = loadHistory();
+
+    function setStatus(text){ statusText.textContent = text; }
+
+    function setTheme(theme){
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(THEME_KEY, theme);
+      const isLight = theme === "light";
+      themeToggle.checked = isLight;
+      themeLabel.textContent = isLight ? "light" : "dark";
+    }
+
+    function initTheme(){
+      const saved = localStorage.getItem(THEME_KEY);
+      if(saved === "light" || saved === "dark"){
+        setTheme(saved);
+        return;
+      }
+      const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+      setTheme(prefersLight ? "light" : "dark");
+    }
 
     function addMessage(role, text){
       const row = document.createElement("div");
-      row.className = "msg" + (role === "user" ? " user" : "");
+      row.className = "msg " + (role === "user" ? "me" : "bot");
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+
+      if(role === "user"){
+        avatar.textContent = "You";
+      } else {
+        avatar.innerHTML = `<img src="./isabelle.png" alt="Isabelle">`;
+      }
 
       const bubble = document.createElement("div");
       bubble.className = "bubble";
       bubble.textContent = text;
 
+      row.appendChild(avatar);
       row.appendChild(bubble);
       messagesEl.appendChild(row);
       messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function saveHistory(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    }
+
+    function loadHistory(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      }catch(e){
+        return [];
+      }
+    }
+
+    function renderHistory(){
+      messagesEl.innerHTML = "";
+      if(history.length === 0){
+        addMessage("assistant",
+          "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to."
+        );
+        return;
+      }
+      for(const m of history){
+        addMessage(m.role, m.content);
+      }
     }
 
     async function send(){
@@ -197,47 +476,87 @@
 
       inputEl.value = "";
       addMessage("user", text);
+      history.push({ role:"user", content:text });
+      saveHistory();
 
       sendBtn.disabled = true;
+      setStatus("thinking...");
 
       try{
         const res = await fetch(CHAT_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ message: text })
         });
 
         if(!res.ok){
           const err = await res.text();
-          addMessage("assistant", "Server error:\n" + err);
+          const msg = `server error ${res.status}\n${err}`;
+          addMessage("assistant", msg);
+          history.push({ role:"assistant", content: msg });
+          saveHistory();
           return;
         }
 
         const data = await res.json();
-        addMessage("assistant", data.reply || "No reply");
+        const reply = data?.reply || "(no reply)";
+        addMessage("assistant", reply);
+        history.push({ role:"assistant", content: reply });
+        saveHistory();
       }catch(e){
-        addMessage("assistant", "Network error calling AI");
+        const msg = "network error calling the chat endpoint";
+        addMessage("assistant", msg);
+        history.push({ role:"assistant", content: msg });
+        saveHistory();
       }finally{
         sendBtn.disabled = false;
+        setStatus("ready");
       }
     }
 
-    sendBtn.onclick = send;
-    inputEl.addEventListener("keydown", e => {
+    function autosize(){
+      inputEl.style.height = "0px";
+      inputEl.style.height = Math.min(160, inputEl.scrollHeight) + "px";
+    }
+
+    sendBtn.addEventListener("click", send);
+    inputEl.addEventListener("input", autosize);
+
+    inputEl.addEventListener("keydown", (e) => {
       if(e.key === "Enter" && !e.shiftKey){
         e.preventDefault();
         send();
       }
     });
 
-    // initial message
-    addMessage(
-      "assistant",
-      "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to."
-    );
+    clearChatEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      history = [];
+      saveHistory();
+      renderHistory();
+    });
+
+    exportChatEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      const blob = new Blob([JSON.stringify(history, null, 2)], { type:"application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "isabelle-ai-chat.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    themeToggle.addEventListener("change", () => {
+      setTheme(themeToggle.checked ? "light" : "dark");
+    });
+
+    initTheme();
+    renderHistory();
+    autosize();
+    setStatus("ready");
   </script>
 </body>
 </html>
-
-
-
