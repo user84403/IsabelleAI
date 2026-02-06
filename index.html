@@ -12,7 +12,6 @@
       --shadow: 0 18px 60px rgba(0,0,0,.18);
       --radius:18px;
 
-      /* dark default */
       --bg:#070A0F;
       --panel:#0B1020;
       --panel2:#0A0E1A;
@@ -29,7 +28,6 @@
       --bubbleMeBorder: rgba(253,43,43,.35);
     }
 
-    /* light mode overrides */
     [data-theme="light"]{
       --bg:#F6F7FB;
       --panel:#FFFFFF;
@@ -59,19 +57,8 @@
         var(--bg);
     }
 
-    .wrap{
-      min-height:100%;
-      display:flex;
-      justify-content:center;
-      padding:28px 18px;
-    }
-
-    .chat-shell{
-      width:min(980px, 100%);
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
+    .wrap{ min-height:100%; display:flex; justify-content:center; padding:28px 18px; }
+    .chat-shell{ width:min(980px, 100%); display:flex; flex-direction:column; gap:14px; }
 
     header{
       display:flex;
@@ -81,43 +68,19 @@
       padding:12px 6px;
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
+    .brand{ display:flex; align-items:center; gap:12px; }
     .brandpic{
-      width:44px;
-      height:44px;
-      border-radius:50%;
-      object-fit:cover;
-      object-position:center 18%;
+      width:44px; height:44px; border-radius:50%;
+      object-fit:cover; object-position:center 18%;
       border:1px solid var(--border);
       box-shadow: 0 14px 34px rgba(0,0,0,.25);
       flex:0 0 auto;
     }
 
-    h1{
-      font-size:20px;
-      margin:0;
-      letter-spacing:.2px;
-      font-weight:700;
-    }
+    h1{ font-size:20px; margin:0; letter-spacing:.2px; font-weight:700; }
+    .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
 
-    .sub{
-      font-size:13px;
-      color:var(--muted);
-      margin-top:3px;
-    }
-
-    .meta{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      color:var(--muted);
-      font-size:13px;
-    }
+    .meta{ display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px; }
 
     .pill{
       padding:8px 10px;
@@ -129,9 +92,7 @@
       align-items:center;
     }
 
-    [data-theme="light"] .pill{
-      background:rgba(11,16,32,.03);
-    }
+    [data-theme="light"] .pill{ background:rgba(11,16,32,.03); }
 
     .statusdot{
       width:8px;height:8px;border-radius:50%;
@@ -139,12 +100,7 @@
       box-shadow:0 0 18px rgba(53,208,127,.25);
     }
 
-    .toggle{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-    }
+    .toggle{ display:flex; align-items:center; gap:8px; user-select:none; }
 
     .toggle input{
       appearance:none;
@@ -159,9 +115,7 @@
       transition:.2s ease;
     }
 
-    [data-theme="light"] .toggle input{
-      background:rgba(11,16,32,.05);
-    }
+    [data-theme="light"] .toggle input{ background:rgba(11,16,32,.05); }
 
     .toggle input::after{
       content:"";
@@ -196,15 +150,9 @@
       flex-direction:column;
     }
 
-    [data-theme="light"] .panel{
-      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
-    }
+    [data-theme="light"] .panel{ background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01)); }
 
-    .messages{
-      padding:18px;
-      overflow:auto;
-      flex:1;
-    }
+    .messages{ padding:18px; overflow:auto; flex:1; }
 
     .msg{
       display:flex;
@@ -225,9 +173,7 @@
       color:var(--muted);
     }
 
-    [data-theme="light"] .avatar{
-      background:rgba(11,16,32,.03);
-    }
+    [data-theme="light"] .avatar{ background:rgba(11,16,32,.03); }
 
     .avatar img{
       width:100%;
@@ -249,9 +195,7 @@
       word-wrap:break-word;
     }
 
-    .me{
-      flex-direction:row-reverse;
-    }
+    .me{ flex-direction:row-reverse; }
 
     .me .bubble{
       background:var(--bubbleMeBg);
@@ -262,7 +206,7 @@
       color:#ffd4d4;
       border-color: var(--bubbleMeBorder);
       background:rgba(253,43,43,.10);
-      border-radius:14px; /* keep user boxy like before */
+      border-radius:14px;
     }
 
     .composer{
@@ -274,9 +218,7 @@
       align-items:flex-end;
     }
 
-    [data-theme="light"] .composer{
-      background:rgba(11,16,32,.03);
-    }
+    [data-theme="light"] .composer{ background:rgba(11,16,32,.03); }
 
     textarea{
       width:100%;
@@ -310,7 +252,7 @@
       white-space:nowrap;
     }
 
-    button:disabled{opacity:.6; cursor:not-allowed}
+    button:disabled{ opacity:.6; cursor:not-allowed; }
 
     .row2{
       display:flex;
@@ -327,14 +269,15 @@
       border-bottom:1px dotted rgba(167,176,214,.35);
     }
 
-    .smalllink:hover{color:var(--text)}
-    .hint{opacity:.9}
+    .smalllink:hover{ color:var(--text); }
+
+    .hint{ opacity:.9; }
 
     @media (max-width:640px){
-      .bubble{max-width: 46ch}
-      header{flex-direction:column; align-items:flex-start}
-      .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
-      .panel{min-height: 76vh}
+      .bubble{ max-width: 46ch; }
+      header{ flex-direction:column; align-items:flex-start; }
+      .meta{ width:100%; justify-content:space-between; flex-wrap:wrap; }
+      .panel{ min-height: 76vh; }
     }
   </style>
 </head>
@@ -385,7 +328,12 @@
   </div>
 
   <script>
+    // your deployed edge function
     const CHAT_ENDPOINT = "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/chat";
+
+    // IMPORTANT: paste your Supabase anon key here
+    // you can find it in Supabase dashboard -> Project Settings -> API -> anon public key
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
 
     const messagesEl = document.getElementById("messages");
     const inputEl = document.getElementById("input");
@@ -474,6 +422,11 @@
       const text = inputEl.value.trim();
       if(!text) return;
 
+      if(!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"){
+        addMessage("assistant", "supabase anon key is not set in the code yet");
+        return;
+      }
+
       inputEl.value = "";
       addMessage("user", text);
       history.push({ role:"user", content:text });
@@ -485,7 +438,11 @@
       try{
         const res = await fetch(CHAT_ENDPOINT, {
           method:"POST",
-          headers:{ "Content-Type":"application/json" },
+          headers:{
+            "Content-Type":"application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + SUPABASE_ANON_KEY
+          },
           body: JSON.stringify({ message: text })
         });
 
@@ -560,3 +517,4 @@
   </script>
 </body>
 </html>
+
