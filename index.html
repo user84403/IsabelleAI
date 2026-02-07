@@ -124,7 +124,6 @@
       align-items:center;
       white-space:nowrap;
     }
-
     [data-theme="light"] .pill{ background:rgba(11,16,32,.03); }
 
     .statusdot{
@@ -134,7 +133,6 @@
     }
 
     .toggle{ display:flex; align-items:center; gap:8px; user-select:none; }
-
     .toggle input{
       appearance:none;
       width:44px;
@@ -146,9 +144,7 @@
       cursor:pointer;
       transition:.2s ease;
     }
-
     [data-theme="light"] .toggle input{ background:rgba(11,16,32,.05); }
-
     .toggle input::after{
       content:"";
       position:absolute;
@@ -159,7 +155,6 @@
       opacity:.9;
       transition:.2s ease;
     }
-
     .toggle input:checked{
       border-color: rgba(253,43,43,.55);
       box-shadow:0 0 0 4px rgba(253,43,43,.10);
@@ -177,7 +172,6 @@
       display:flex;
       flex-direction:column;
     }
-
     [data-theme="light"] .panel{
       background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
     }
@@ -209,7 +203,6 @@
       color:var(--muted);
     }
     [data-theme="light"] .avatar{ background:rgba(11,16,32,.03); }
-
     .avatar img{
       width:100%;
       height:100%;
@@ -232,7 +225,6 @@
 
     .me{ flex-direction:row-reverse; }
     .me .bubble{ background:var(--bubbleMeBg); border-color:var(--bubbleMeBorder); }
-
     .me .avatar{
       color:#ffd4d4;
       border-color:var(--bubbleMeBorder);
@@ -249,7 +241,6 @@
       gap:10px;
       align-items:flex-end;
     }
-
     [data-theme="light"] .composer{ background:rgba(11,16,32,.03); }
 
     textarea{
@@ -266,7 +257,6 @@
       line-height:1.35;
       font-size:14px;
     }
-
     textarea:focus{
       border-color: rgba(253,43,43,.55);
       box-shadow:0 0 0 4px rgba(253,43,43,.10);
@@ -303,13 +293,53 @@
       border-bottom:1px dotted rgba(167,176,214,.35);
     }
     .smalllink:hover{ color:var(--text); }
-    .hint{ opacity:.9; }
+
+    /* login screen */
+    .center{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .card{
+      width:min(520px, 100%);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      box-shadow: var(--shadow);
+      padding:22px;
+    }
+    [data-theme="light"] .card{
+      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:14px;
+    }
+    .label{ font-size:13px; color:var(--muted); }
+    .input{
+      border:1px solid var(--border);
+      background:var(--inputBg);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px;
+      outline:none;
+      font-size:14px;
+    }
+    .input:focus{
+      border-color: rgba(253,43,43,.55);
+      box-shadow:0 0 0 4px rgba(253,43,43,.10);
+    }
+    .err{ margin-top:12px; color:#ffb3b3; font-size:13px; white-space:pre-wrap; }
+    .ok{ margin-top:12px; color:#b7ffd3; font-size:13px; white-space:pre-wrap; }
 
     @media (max-width:640px){
-      .bubble{max-width:46ch}
       header{flex-direction:column; align-items:flex-start}
       .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
       .wrap{padding:18px 12px}
+      .bubble{max-width:46ch}
     }
   </style>
 </head>
@@ -337,13 +367,51 @@
             <input id="themeToggle" type="checkbox" aria-label="toggle theme" />
           </div>
 
-          <div class="pill" title="clears the chat on this device only">
+          <div class="pill" id="logoutPill" style="display:none;">
+            <a class="smalllink" href="#" id="logoutBtn">logout</a>
+          </div>
+
+          <div class="pill" id="clearPill" style="display:none;">
             <a class="smalllink" href="#" id="clearChat">clear chat</a>
           </div>
         </div>
       </header>
 
-      <section class="panel">
+      <!-- LOGIN VIEW -->
+      <section class="panel" id="loginView" style="display:none;">
+        <div class="center">
+          <div class="card">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img class="brandpic" src="./isabelle.png" alt="Isabelle" style="width:54px;height:54px;">
+              <div>
+                <div style="font-size:18px; font-weight:800;">login required</div>
+                <div class="sub">use the credentials you were given</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="label">email</div>
+              <input class="input" id="email" type="email" autocomplete="email" placeholder="name@email.com">
+            </div>
+
+            <div class="field">
+              <div class="label">password</div>
+              <input class="input" id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+            </div>
+
+            <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
+              <button id="loginBtn">Login</button>
+              <div class="sub" id="loginHint" style="margin:0;">invite only</div>
+            </div>
+
+            <div class="err" id="loginErr" style="display:none;"></div>
+            <div class="ok" id="loginOk" style="display:none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT VIEW -->
+      <section class="panel" id="chatView" style="display:none;">
         <div class="messages" id="messages"></div>
 
         <div class="composer">
@@ -359,28 +427,46 @@
     </div>
   </div>
 
-  <script>
+  <!-- Supabase JS (browser) -->
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL = "https://mzccaacasiuvixvhscrt.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
+
     const CHAT_ENDPOINT = "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/chat";
 
-    // your saved anon key (already filled)
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const statusText = document.getElementById("statusText");
+
+    const loginView = document.getElementById("loginView");
+    const chatView = document.getElementById("chatView");
+
+    const logoutPill = document.getElementById("logoutPill");
+    const clearPill = document.getElementById("clearPill");
+
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginErr = document.getElementById("loginErr");
+    const loginOk = document.getElementById("loginOk");
 
     const messagesEl = document.getElementById("messages");
     const inputEl = document.getElementById("input");
     const sendBtn = document.getElementById("send");
-    const statusText = document.getElementById("statusText");
     const clearChatEl = document.getElementById("clearChat");
     const exportChatEl = document.getElementById("exportChat");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     const themeToggle = document.getElementById("themeToggle");
     const themeLabel = document.getElementById("themeLabel");
     const THEME_KEY = "isabelle_ai_theme";
 
-    // v3 because we changed payload format to messages[]
-    const STORAGE_KEY = "isabelle_ai_chat_v3";
+    const STORAGE_KEY = "isabelle_ai_chat_auth_v1";
     let history = loadHistory();
 
-    function setStatus(text){ statusText.textContent = text; }
+    function setStatus(t){ statusText.textContent = t; }
 
     function setTheme(theme){
       document.documentElement.setAttribute("data-theme", theme);
@@ -397,16 +483,33 @@
       setTheme(prefersLight ? "light" : "dark");
     }
 
+    themeToggle.addEventListener("change", () => {
+      setTheme(themeToggle.checked ? "light" : "dark");
+    });
+
+    function showLogin(){
+      loginView.style.display = "block";
+      chatView.style.display = "none";
+      logoutPill.style.display = "none";
+      clearPill.style.display = "none";
+    }
+
+    function showChat(){
+      loginView.style.display = "none";
+      chatView.style.display = "flex";
+      logoutPill.style.display = "flex";
+      clearPill.style.display = "flex";
+    }
+
     function addMessage(role, text){
       const row = document.createElement("div");
       row.className = "msg " + (role === "user" ? "me" : "bot");
 
       const avatar = document.createElement("div");
       avatar.className = "avatar";
-
       if(role === "user"){
         avatar.textContent = "You";
-      } else {
+      }else{
         avatar.innerHTML = `<img src="./isabelle.png" alt="Isabelle">`;
       }
 
@@ -438,7 +541,90 @@
       for(const m of history){ addMessage(m.role, m.content); }
     }
 
+    function autosize(){
+      inputEl.style.height = "0px";
+      inputEl.style.height = Math.min(160, inputEl.scrollHeight) + "px";
+    }
+
+    async function doLogin(){
+      loginErr.style.display = "none";
+      loginOk.style.display = "none";
+
+      const email = (emailEl.value || "").trim();
+      const password = (passwordEl.value || "").trim();
+
+      if(!email || !password){
+        loginErr.textContent = "please enter email and password";
+        loginErr.style.display = "block";
+        return;
+      }
+
+      setStatus("logging in...");
+      loginBtn.disabled = true;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      loginBtn.disabled = false;
+
+      if(error){
+        setStatus("ready");
+        loginErr.textContent = error.message;
+        loginErr.style.display = "block";
+        return;
+      }
+
+      loginOk.textContent = "logged in";
+      loginOk.style.display = "block";
+      setStatus("ready");
+
+      showChat();
+      renderHistory();
+      autosize();
+      inputEl.focus();
+    }
+
+    loginBtn.addEventListener("click", doLogin);
+    passwordEl.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){ doLogin(); }
+    });
+
+    logoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await supabase.auth.signOut();
+      showLogin();
+    });
+
+    clearChatEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      history = [];
+      saveHistory();
+      renderHistory();
+    });
+
+    exportChatEl.addEventListener("click", (e) => {
+      e.preventDefault();
+      const blob = new Blob([JSON.stringify(history, null, 2)], { type:"application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "isabelle-ai-chat.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
     async function send(){
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      if(!accessToken){
+        addMessage("assistant", "session expired, please log in again");
+        await supabase.auth.signOut();
+        showLogin();
+        return;
+      }
+
       const text = inputEl.value.trim();
       if(!text) return;
 
@@ -452,7 +638,6 @@
       sendBtn.disabled = true;
       setStatus("thinking...");
 
-      // send FULL conversation every time
       const payload = {
         messages: history.map(m => ({
           role: m.role === "assistant" ? "assistant" : "user",
@@ -466,7 +651,7 @@
           headers:{
             "Content-Type":"application/json",
             "apikey": SUPABASE_ANON_KEY,
-            "Authorization": "Bearer " + SUPABASE_ANON_KEY
+            "Authorization": "Bearer " + accessToken
           },
           body: JSON.stringify(payload)
         });
@@ -496,14 +681,8 @@
       }
     }
 
-    function autosize(){
-      inputEl.style.height = "0px";
-      inputEl.style.height = Math.min(160, inputEl.scrollHeight) + "px";
-    }
-
     sendBtn.addEventListener("click", send);
     inputEl.addEventListener("input", autosize);
-
     inputEl.addEventListener("keydown", (e) => {
       if(e.key === "Enter" && !e.shiftKey){
         e.preventDefault();
@@ -511,37 +690,22 @@
       }
     });
 
-    clearChatEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      history = [];
-      saveHistory();
-      renderHistory();
-    });
-
-    exportChatEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      const blob = new Blob([JSON.stringify(history, null, 2)], { type:"application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "isabelle-ai-chat.json";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
-
-    themeToggle.addEventListener("change", () => {
-      setTheme(themeToggle.checked ? "light" : "dark");
-    });
-
+    // initial load: show correct screen
     initTheme();
-    renderHistory();
-    autosize();
     setStatus("ready");
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    if(sessionData?.session){
+      showChat();
+      renderHistory();
+      autosize();
+    } else {
+      showLogin();
+    }
   </script>
 </body>
 </html>
+
 
 
 
