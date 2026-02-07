@@ -57,10 +57,9 @@
         radial-gradient(800px 500px at 85% 15%, var(--bgGlow2), transparent 55%),
         radial-gradient(900px 700px at 50% 110%, var(--bgGlow3), transparent 60%),
         var(--bg);
-      overflow:hidden; /* key: prevent whole page scroll */
+      overflow:hidden;
     }
 
-    /* key: viewport-height layout */
     .wrap{
       height:100vh;
       display:flex;
@@ -74,7 +73,7 @@
       display:flex;
       flex-direction:column;
       gap:14px;
-      min-height:0; /* key */
+      min-height:0;
     }
 
     header{
@@ -167,10 +166,9 @@
     }
     .toggle input:checked::after{ left:21px; background:white; }
 
-    /* key: panel fills remaining height */
     .panel{
       flex:1 1 auto;
-      min-height:0; /* key */
+      min-height:0;
       border:1px solid var(--border);
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       border-radius:var(--radius);
@@ -184,10 +182,9 @@
       background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
     }
 
-    /* key: ONLY this area scrolls */
     .messages{
       flex:1 1 auto;
-      min-height:0; /* key */
+      min-height:0;
       padding:18px;
       overflow:auto;
       overscroll-behavior: contain;
@@ -364,6 +361,8 @@
 
   <script>
     const CHAT_ENDPOINT = "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/chat";
+
+    // your saved anon key (already filled)
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
 
     const messagesEl = document.getElementById("messages");
@@ -377,7 +376,8 @@
     const themeLabel = document.getElementById("themeLabel");
     const THEME_KEY = "isabelle_ai_theme";
 
-    const STORAGE_KEY = "isabelle_ai_chat_v2";
+    // v3 because we changed payload format to messages[]
+    const STORAGE_KEY = "isabelle_ai_chat_v3";
     let history = loadHistory();
 
     function setStatus(text){ statusText.textContent = text; }
@@ -429,9 +429,10 @@
     function renderHistory(){
       messagesEl.innerHTML = "";
       if(history.length === 0){
-        addMessage("assistant",
-          "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to."
-        );
+        const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
+        addMessage("assistant", hello);
+        history.push({ role:"assistant", content: hello });
+        saveHistory();
         return;
       }
       for(const m of history){ addMessage(m.role, m.content); }
@@ -440,11 +441,6 @@
     async function send(){
       const text = inputEl.value.trim();
       if(!text) return;
-
-      if(!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "PASTE_YOUR_SUPABASE_ANON_KEY_HERE"){
-        addMessage("assistant", "supabase anon key is not set in the code yet");
-        return;
-      }
 
       inputEl.value = "";
       autosize();
@@ -456,6 +452,14 @@
       sendBtn.disabled = true;
       setStatus("thinking...");
 
+      // send FULL conversation every time
+      const payload = {
+        messages: history.map(m => ({
+          role: m.role === "assistant" ? "assistant" : "user",
+          content: m.content
+        }))
+      };
+
       try{
         const res = await fetch(CHAT_ENDPOINT, {
           method:"POST",
@@ -464,7 +468,7 @@
             "apikey": SUPABASE_ANON_KEY,
             "Authorization": "Bearer " + SUPABASE_ANON_KEY
           },
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify(payload)
         });
 
         if(!res.ok){
@@ -538,5 +542,6 @@
   </script>
 </body>
 </html>
+
 
 
