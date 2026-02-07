@@ -14,13 +14,14 @@
 
       --bg:#070A0F;
       --panel:#0B1020;
-      --panel2:#0A0E1A;
       --border:#1B2440;
       --text:#E9EEFF;
       --muted:#A7B0D6;
+
       --bgGlow1: rgba(253,43,43,.10);
       --bgGlow2: rgba(255,255,255,.05);
       --bgGlow3: rgba(253,43,43,.08);
+
       --status:#35d07f;
       --inputBg: rgba(7,10,15,.55);
       --bubbleBg: rgba(10,14,26,.75);
@@ -31,13 +32,14 @@
     [data-theme="light"]{
       --bg:#F6F7FB;
       --panel:#FFFFFF;
-      --panel2:#FFFFFF;
       --border:#E3E7F3;
       --text:#0B1020;
       --muted:#56607A;
+
       --bgGlow1: rgba(253,43,43,.08);
       --bgGlow2: rgba(11,16,32,.04);
       --bgGlow3: rgba(253,43,43,.06);
+
       --status:#1ea45b;
       --inputBg: rgba(255,255,255,.85);
       --bubbleBg: rgba(246,247,251,.95);
@@ -45,9 +47,9 @@
     }
 
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%; margin:0;}
+
     body{
-      margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
       color:var(--text);
       background:
@@ -55,10 +57,25 @@
         radial-gradient(800px 500px at 85% 15%, var(--bgGlow2), transparent 55%),
         radial-gradient(900px 700px at 50% 110%, var(--bgGlow3), transparent 60%),
         var(--bg);
+      overflow:hidden; /* key: prevent whole page scroll */
     }
 
-    .wrap{ min-height:100%; display:flex; justify-content:center; padding:28px 18px; }
-    .chat-shell{ width:min(980px, 100%); display:flex; flex-direction:column; gap:14px; }
+    /* key: viewport-height layout */
+    .wrap{
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:28px 18px;
+    }
+
+    .chat-shell{
+      width:min(980px, 100%);
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      min-height:0; /* key */
+    }
 
     header{
       display:flex;
@@ -66,21 +83,37 @@
       justify-content:space-between;
       gap:16px;
       padding:12px 6px;
+      flex:0 0 auto;
     }
 
-    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
     .brandpic{
-      width:44px; height:44px; border-radius:50%;
-      object-fit:cover; object-position:center 18%;
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      object-fit:cover;
+      object-position:center 18%;
       border:1px solid var(--border);
       box-shadow: 0 14px 34px rgba(0,0,0,.25);
       flex:0 0 auto;
     }
 
-    h1{ font-size:20px; margin:0; letter-spacing:.2px; font-weight:700; }
+    h1{ font-size:20px; margin:0; font-weight:700; }
     .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
 
-    .meta{ display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px; }
+    .meta{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+      flex:0 0 auto;
+    }
 
     .pill{
       padding:8px 10px;
@@ -90,6 +123,7 @@
       display:flex;
       gap:8px;
       align-items:center;
+      white-space:nowrap;
     }
 
     [data-theme="light"] .pill{ background:rgba(11,16,32,.03); }
@@ -110,7 +144,6 @@
       border:1px solid var(--border);
       background:rgba(255,255,255,.05);
       position:relative;
-      outline:none;
       cursor:pointer;
       transition:.2s ease;
     }
@@ -132,27 +165,33 @@
       border-color: rgba(253,43,43,.55);
       box-shadow:0 0 0 4px rgba(253,43,43,.10);
     }
+    .toggle input:checked::after{ left:21px; background:white; }
 
-    .toggle input:checked::after{
-      left:21px;
-      background:white;
-    }
-
+    /* key: panel fills remaining height */
     .panel{
-      flex:1;
+      flex:1 1 auto;
+      min-height:0; /* key */
       border:1px solid var(--border);
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
       border-radius:var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
-      min-height: 70vh;
       display:flex;
       flex-direction:column;
     }
 
-    [data-theme="light"] .panel{ background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01)); }
+    [data-theme="light"] .panel{
+      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
+    }
 
-    .messages{ padding:18px; overflow:auto; flex:1; }
+    /* key: ONLY this area scrolls */
+    .messages{
+      flex:1 1 auto;
+      min-height:0; /* key */
+      padding:18px;
+      overflow:auto;
+      overscroll-behavior: contain;
+    }
 
     .msg{
       display:flex;
@@ -172,7 +211,6 @@
       font-size:12px;
       color:var(--muted);
     }
-
     [data-theme="light"] .avatar{ background:rgba(11,16,32,.03); }
 
     .avatar img{
@@ -185,7 +223,7 @@
     }
 
     .bubble{
-      max-width: 78ch;
+      max-width:78ch;
       border:1px solid var(--border);
       border-radius:16px;
       padding:12px 14px;
@@ -196,20 +234,17 @@
     }
 
     .me{ flex-direction:row-reverse; }
-
-    .me .bubble{
-      background:var(--bubbleMeBg);
-      border-color: var(--bubbleMeBorder);
-    }
+    .me .bubble{ background:var(--bubbleMeBg); border-color:var(--bubbleMeBorder); }
 
     .me .avatar{
       color:#ffd4d4;
-      border-color: var(--bubbleMeBorder);
+      border-color:var(--bubbleMeBorder);
       background:rgba(253,43,43,.10);
       border-radius:14px;
     }
 
     .composer{
+      flex:0 0 auto;
       border-top:1px solid var(--border);
       background:rgba(0,0,0,.10);
       padding:14px;
@@ -225,7 +260,7 @@
       min-height:52px;
       max-height:160px;
       resize:none;
-      padding:12px 12px;
+      padding:12px;
       border-radius:14px;
       border:1px solid var(--border);
       background:var(--inputBg);
@@ -241,6 +276,7 @@
     }
 
     button{
+      flex:0 0 auto;
       border:0;
       border-radius:14px;
       padding:12px 16px;
@@ -251,16 +287,17 @@
       box-shadow: 0 14px 34px rgba(253,43,43,.22);
       white-space:nowrap;
     }
-
-    button:disabled{ opacity:.6; cursor:not-allowed; }
+    button:disabled{opacity:.6; cursor:not-allowed;}
 
     .row2{
+      flex:0 0 auto;
       display:flex;
       justify-content:space-between;
       padding:0 14px 14px 14px;
       color:var(--muted);
       font-size:12px;
       gap:14px;
+      background:transparent;
     }
 
     .smalllink{
@@ -268,16 +305,14 @@
       text-decoration:none;
       border-bottom:1px dotted rgba(167,176,214,.35);
     }
-
     .smalllink:hover{ color:var(--text); }
-
     .hint{ opacity:.9; }
 
     @media (max-width:640px){
-      .bubble{ max-width: 46ch; }
-      header{ flex-direction:column; align-items:flex-start; }
-      .meta{ width:100%; justify-content:space-between; flex-wrap:wrap; }
-      .panel{ min-height: 76vh; }
+      .bubble{max-width:46ch}
+      header{flex-direction:column; align-items:flex-start}
+      .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
+      .wrap{padding:18px 12px}
     }
   </style>
 </head>
@@ -328,12 +363,8 @@
   </div>
 
   <script>
-    // your deployed edge function
     const CHAT_ENDPOINT = "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/chat";
-
-    // IMPORTANT: paste your Supabase anon key here
-    // you can find it in Supabase dashboard -> Project Settings -> API -> anon public key
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
 
     const messagesEl = document.getElementById("messages");
     const inputEl = document.getElementById("input");
@@ -346,7 +377,7 @@
     const themeLabel = document.getElementById("themeLabel");
     const THEME_KEY = "isabelle_ai_theme";
 
-    const STORAGE_KEY = "isabelle_ai_chat_v1";
+    const STORAGE_KEY = "isabelle_ai_chat_v2";
     let history = loadHistory();
 
     function setStatus(text){ statusText.textContent = text; }
@@ -361,10 +392,7 @@
 
     function initTheme(){
       const saved = localStorage.getItem(THEME_KEY);
-      if(saved === "light" || saved === "dark"){
-        setTheme(saved);
-        return;
-      }
+      if(saved === "light" || saved === "dark"){ setTheme(saved); return; }
       const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
       setTheme(prefersLight ? "light" : "dark");
     }
@@ -392,17 +420,10 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    function saveHistory(){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-    }
-
+    function saveHistory(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); }
     function loadHistory(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      }catch(e){
-        return [];
-      }
+      try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+      catch(e){ return []; }
     }
 
     function renderHistory(){
@@ -413,9 +434,7 @@
         );
         return;
       }
-      for(const m of history){
-        addMessage(m.role, m.content);
-      }
+      for(const m of history){ addMessage(m.role, m.content); }
     }
 
     async function send(){
@@ -428,6 +447,8 @@
       }
 
       inputEl.value = "";
+      autosize();
+
       addMessage("user", text);
       history.push({ role:"user", content:text });
       saveHistory();
@@ -517,4 +538,5 @@
   </script>
 </body>
 </html>
+
 
