@@ -102,7 +102,6 @@
       flex:0 0 auto;
     }
 
-    /* bigger title */
     h1{ font-size:24px; margin:0; font-weight:800; letter-spacing:-.2px; }
     .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
 
@@ -278,7 +277,6 @@
     }
     button:disabled{opacity:.6; cursor:not-allowed;}
 
-    /* bottom hint smaller + subtle, export removed */
     .row2{
       flex:0 0 auto;
       display:flex;
@@ -338,55 +336,43 @@
     .err{ margin-top:12px; color:#ffb3b3; font-size:13px; white-space:pre-wrap; }
     .ok{ margin-top:12px; color:#b7ffd3; font-size:13px; white-space:pre-wrap; }
 
-    /* typing line under first bubble */
-    .typing-line{
-      margin:6px 0 0 46px;
-      font-size:13px;
-      color:var(--muted);
-      opacity:.9;
-      user-select:none;
-    }
-
-    /* centered quick chips */
+    /* quick questions (stacked, smaller, clean, no border) */
     .quick-actions{
       width:100%;
       display:flex;
-      justify-content:center;
+      flex-direction:column;
       align-items:center;
-      gap:14px;
-      flex-wrap:wrap;
-      padding:44px 18px 18px 18px;
+      gap:10px;
+      padding:36px 18px 18px 18px;
     }
 
     .quick-chip{
-      border:1px solid rgba(167,176,214,.35);
-      background:rgba(255,255,255,.02);
+      width:min(520px, 100%);
+      border:0;
+      background:rgba(255,255,255,.04);
       color:var(--text);
-      padding:16px 18px;
-      border-radius:18px;
+      padding:12px 14px;
+      border-radius:14px;
       cursor:pointer;
-      font-size:18px;
+      font-size:15px;
       line-height:1.25;
-      max-width:340px;
-      text-align:left;
+      white-space:normal;
+      text-align:center;
       box-shadow:none;
-      transition:transform .12s ease, border-color .12s ease, background .12s ease, opacity .12s ease;
-      opacity:.85;
+      transition:transform .12s ease, background .12s ease, opacity .12s ease;
+      opacity:.92;
       font-weight:600;
     }
 
     [data-theme="light"] .quick-chip{
-      background:rgba(11,16,32,.02);
-      border-color:rgba(86,96,122,.25);
+      background:rgba(11,16,32,.04);
     }
 
     .quick-chip:hover{
       transform:translateY(-1px);
-      border-color:rgba(253,43,43,.35);
-      background:rgba(253,43,43,.04);
+      background:rgba(253,43,43,.08);
       opacity:1;
     }
-
     .quick-chip:active{ transform:translateY(0px); }
 
     @media (max-width:640px){
@@ -394,7 +380,8 @@
       .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
       .wrap{padding:18px 12px}
       .bubble{max-width:46ch}
-      .quick-chip{ font-size:16px; max-width:100%; }
+      .quick-actions{ padding:28px 14px 14px 14px; }
+      .quick-chip{ font-size:14px; }
     }
   </style>
 </head>
@@ -467,7 +454,6 @@
       <section class="panel" id="chatView" style="display:none;">
         <div class="messages" id="messages">
           <div id="quickActions" class="quick-actions" style="display:none;"></div>
-          <div id="typingLine" class="typing-line" style="display:none;"></div>
         </div>
 
         <div class="composer">
@@ -512,7 +498,6 @@
     const logoutBtn = document.getElementById("logoutBtn");
 
     const quickActionsEl = document.getElementById("quickActions");
-    const typingLineEl = document.getElementById("typingLine");
 
     const themeToggle = document.getElementById("themeToggle");
     const themeLabel = document.getElementById("themeLabel");
@@ -604,20 +589,7 @@
       catch(e){ return []; }
     }
 
-    function showTypingLine(text){
-      typingLineEl.textContent = text;
-      typingLineEl.style.display = "block";
-    }
-
-    function hideTypingLine(){
-      typingLineEl.style.display = "none";
-      typingLineEl.textContent = "";
-    }
-
-    function showQuickActions(){
-      quickActionsEl.style.display = "flex";
-    }
-
+    function showQuickActions(){ quickActionsEl.style.display = "flex"; }
     function hideQuickActions(){
       quickActionsEl.style.display = "none";
       quickActionsEl.innerHTML = "";
@@ -651,7 +623,6 @@
     function renderHistory(){
       messagesEl.innerHTML = "";
       messagesEl.appendChild(quickActionsEl);
-      messagesEl.appendChild(typingLineEl);
 
       if(history.length === 0){
         const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
@@ -661,12 +632,11 @@
 
         buildQuickActions();
         showQuickActions();
-        hideTypingLine();
         return;
       }
 
       hideQuickActions();
-      hideTypingLine();
+      removeTypingBubble();
 
       for(const m of history){ addMessage(m.role, m.content); }
     }
@@ -731,9 +701,41 @@
       renderHistory();
     });
 
-    function lastAssistantWasHello(){
-      if(history.length === 0) return true;
-      return false;
+    function isGenericGreeting(text){
+      const t = (text || "").trim().toLowerCase();
+      return /^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|hiya|heyy+)\b[!. ]*$/.test(t);
+    }
+
+    function getTypingText(userText){
+      return isGenericGreeting(userText)
+        ? "Isabelle is thinking..."
+        : "Looking through course material...";
+    }
+
+    function addTypingBubble(text){
+      const row = document.createElement("div");
+      row.className = "msg bot";
+      row.dataset.typing = "1";
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.innerHTML = `<img src="./isabelle.png" alt="Isabelle">`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      return { row, bubble };
+    }
+
+    function removeTypingBubble(){
+      const el = messagesEl.querySelector('.msg.bot[data-typing="1"]');
+      if(el) el.remove();
     }
 
     async function send(){
@@ -760,7 +762,9 @@
 
       sendBtn.disabled = true;
       setStatus("thinking...");
-      showTypingLine("Looking through course material...");
+
+      removeTypingBubble();
+      const typing = addTypingBubble(getTypingText(text));
 
       const payload = {
         messages: history.map(m => ({ role: m.role, content: m.content }))
@@ -780,6 +784,7 @@
         if(!res.ok){
           const err = await res.text();
           const msg = `server error ${res.status}\n${err}`;
+          typing.row.remove();
           addMessage("assistant", msg);
           history.push({ role:"assistant", content: msg });
           saveHistory();
@@ -788,17 +793,18 @@
 
         const data = await res.json();
         const reply = data?.reply || "(no reply)";
+        typing.row.remove();
         addMessage("assistant", reply);
         history.push({ role:"assistant", content: reply });
         saveHistory();
       }catch(e){
         const msg = "network error calling the chat endpoint";
+        typing.row.remove();
         addMessage("assistant", msg);
         history.push({ role:"assistant", content: msg });
         saveHistory();
       }finally{
         sendBtn.disabled = false;
-        hideTypingLine();
         setStatus("ready");
       }
     }
@@ -826,5 +832,3 @@
   </script>
 </body>
 </html>
-
-
