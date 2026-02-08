@@ -102,7 +102,6 @@
       flex:0 0 auto;
     }
 
-    /* ✅ title bigger */
     h1{ font-size:24px; margin:0; font-weight:800; letter-spacing:.2px; }
     .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
 
@@ -183,42 +182,77 @@
       padding:18px;
       overflow:auto;
       overscroll-behavior: contain;
+      position:relative;
     }
 
-    /* ✅ quick questions */
+    /* ✅ quick questions centered in the empty area */
+    .quick-center{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      margin:26px 0 0 0;
+    }
+
     .quick-wrap{
-      margin:8px 0 14px 0;
-      padding:12px;
+      width:min(720px, 92%);
       border:1px solid var(--border);
-      border-radius:16px;
+      border-radius:18px;
       background: rgba(255,255,255,.02);
+      padding:18px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.10);
     }
     [data-theme="light"] .quick-wrap{ background: rgba(11,16,32,.02); }
+
     .quick-title{
       font-size:12px;
       color:var(--muted);
-      margin-bottom:10px;
+      margin:0 0 12px 0;
     }
+
     .quick-grid{
       display:flex;
       flex-wrap:wrap;
-      gap:10px;
+      justify-content:center;
+      gap:12px;
     }
+
+    /* ✅ more seamless pills */
     .quick-btn{
-      border:1px solid var(--border);
-      background: rgba(253,43,43,.06);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
       color: var(--text);
-      padding:10px 12px;
+      padding:11px 14px;
       border-radius:999px;
       font-size:13px;
       cursor:pointer;
       transition:.15s ease;
-      box-shadow: 0 10px 26px rgba(0,0,0,.12);
+      box-shadow:none;
+    }
+    [data-theme="light"] .quick-btn{
+      border:1px solid rgba(11,16,32,.10);
+      background: rgba(11,16,32,.03);
     }
     .quick-btn:hover{
       transform: translateY(-1px);
-      border-color: rgba(253,43,43,.45);
-      box-shadow: 0 14px 34px rgba(253,43,43,.14);
+      border-color: rgba(253,43,43,.35);
+      background: rgba(253,43,43,.06);
+    }
+
+    /* ✅ inline loading status where you marked red */
+    .inline-status{
+      margin:6px 0 2px 46px; /* aligns under bot bubble (avatar 36 + gap 10) */
+      font-size:12px;
+      color:var(--muted);
+      opacity:.95;
+      user-select:none;
+    }
+    .inline-status .dot{
+      display:inline-block;
+      width:6px;height:6px;border-radius:50%;
+      background: var(--status);
+      margin-right:8px;
+      box-shadow:0 0 14px rgba(53,208,127,.25);
+      transform: translateY(-1px);
     }
 
     .msg{
@@ -313,13 +347,15 @@
     }
     button:disabled{opacity:.6; cursor:not-allowed;}
 
+    /* ✅ bottom hint smaller, more subtle */
     .row2{
       flex:0 0 auto;
       display:flex;
-      justify-content:space-between;
-      padding:0 14px 14px 14px;
+      justify-content:flex-start;
+      padding:0 14px 12px 14px;
       color:var(--muted);
-      font-size:12px;
+      font-size:11px;
+      opacity:.55;
       gap:14px;
       background:transparent;
     }
@@ -377,6 +413,7 @@
       .wrap{padding:18px 12px}
       .bubble{max-width:46ch}
       h1{ font-size:22px; }
+      .inline-status{ margin-left:0; }
     }
   </style>
 </head>
@@ -456,7 +493,6 @@
 
         <div class="row2">
           <div class="hint">enter to send • shift+enter for a new line</div>
-          <div><a class="smalllink" href="#" id="exportChat">export</a></div>
         </div>
       </section>
     </div>
@@ -489,7 +525,6 @@
     const inputEl = document.getElementById("input");
     const sendBtn = document.getElementById("send");
     const clearChatEl = document.getElementById("clearChat");
-    const exportChatEl = document.getElementById("exportChat");
     const logoutBtn = document.getElementById("logoutBtn");
 
     const themeToggle = document.getElementById("themeToggle");
@@ -584,35 +619,59 @@
       catch(e){ return []; }
     }
 
+    function clearInlineStatus(){
+      const s = document.getElementById("inlineStatus");
+      if(s) s.remove();
+    }
+
+    function showInlineStatus(text){
+      clearInlineStatus();
+      const s = document.createElement("div");
+      s.className = "inline-status";
+      s.id = "inlineStatus";
+      s.innerHTML = `<span class="dot"></span>${escapeHtml(text)}`;
+      messagesEl.appendChild(s);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
     function renderQuickQuestions(){
       const hasUserMsg = history.some(m => m.role === "user");
-      const existing = document.getElementById("quickWrap");
+      const existing = document.getElementById("quickCenter");
       if(existing) existing.remove();
 
       if(hasUserMsg) return;
 
-      const wrap = document.createElement("div");
-      wrap.className = "quick-wrap";
-      wrap.id = "quickWrap";
+      const center = document.createElement("div");
+      center.className = "quick-center";
+      center.id = "quickCenter";
 
-      wrap.innerHTML = `
-        <div class="quick-title">Try one of these:</div>
-        <div class="quick-grid">
-          <button class="quick-btn" data-q="How do I raise my rates without scaring off good clients?">Ask Isabelle how to raise your rates</button>
-          <button class="quick-btn" data-q="How do I deal with time wasters and move them to a deposit fast?">Ask Isabelle how to deal with time wasters</button>
-          <button class="quick-btn" data-q="Help me plan a photoshoot that fits a high-end brand. What shots do I need, and how do I prep?">Ask Isabelle to help planning a photoshoot</button>
+      center.innerHTML = `
+        <div class="quick-wrap">
+          <div class="quick-title">Try one of these:</div>
+          <div class="quick-grid">
+            <button class="quick-btn" data-q="I want to raise my rates. Ask me 3 quick questions first (my current rate, my demand, and what I’m currently offering), then tell me exactly how to raise it without losing good clients.">Ask Isabelle how to raise your rates</button>
+            <button class="quick-btn" data-q="Help me deal with time wasters. Ask me what platform I’m using and what kind of messages I’m getting, then give me a short exact message flow that moves them to screening and deposit fast.">Ask Isabelle how to deal with time wasters</button>
+            <button class="quick-btn" data-q="Help me plan a photoshoot for my ad. Before you give the plan, ask me what vibe I’m selling (GFE or PSE), my target client type, and where I’m posting. Then give me a shot list, outfit ideas, and a simple prep checklist.">Ask Isabelle to help planning a photoshoot</button>
+          </div>
         </div>
       `;
 
-      messagesEl.prepend(wrap);
+      // place it after the first assistant hello message (so it sits in the center area you marked)
+      // if there is no message yet, prepend
+      const firstBubble = messagesEl.querySelector(".msg");
+      if(firstBubble){
+        // after hello message
+        firstBubble.insertAdjacentElement("afterend", center);
+      }else{
+        messagesEl.prepend(center);
+      }
 
-      wrap.querySelectorAll(".quick-btn").forEach(btn => {
+      center.querySelectorAll(".quick-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           const q = btn.getAttribute("data-q") || "";
           inputEl.value = q;
           autosize();
           inputEl.focus();
-          // optional: auto-send immediately
           send();
         });
       });
@@ -620,6 +679,8 @@
 
     function renderHistory(){
       messagesEl.innerHTML = "";
+      clearInlineStatus();
+
       if(history.length === 0){
         const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
         addMessage("assistant", hello);
@@ -628,6 +689,7 @@
       }else{
         for(const m of history){ addMessage(m.role, m.content); }
       }
+
       renderQuickQuestions();
     }
 
@@ -691,26 +753,12 @@
       renderHistory();
     });
 
-    exportChatEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      const blob = new Blob([JSON.stringify(history, null, 2)], { type:"application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "isabelle-ai-chat.json";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
-
     function startLoadingStatus(){
-      // phase 1 (immediate): retrieval vibe
-      setStatus("Looking through course material...");
-      // phase 2 (after ~900ms): thinking vibe
+      setStatus("loading...");
+      showInlineStatus("Looking through course material...");
       if(loadingTimer) clearTimeout(loadingTimer);
       loadingTimer = setTimeout(() => {
-        setStatus("Isabelle is thinking...");
+        showInlineStatus("Isabelle is thinking...");
       }, 900);
     }
 
@@ -718,6 +766,7 @@
       if(loadingTimer) clearTimeout(loadingTimer);
       loadingTimer = null;
       setStatus("ready");
+      clearInlineStatus();
     }
 
     async function send(){
@@ -741,7 +790,7 @@
       history.push({ role:"user", content:text });
       saveHistory();
 
-      // hide quick questions after first user message
+      // remove quick questions after first user message
       renderQuickQuestions();
 
       sendBtn.disabled = true;
@@ -810,3 +859,4 @@
   </script>
 </body>
 </html>
+
