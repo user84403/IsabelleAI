@@ -226,12 +226,9 @@
 
     .me{ flex-direction:row-reverse; }
     .me .bubble{ background:var(--bubbleMeBg); border-color:var(--bubbleMeBorder); }
-    .me .avatar{
-      color:#ffd4d4;
-      border-color:var(--bubbleMeBorder);
-      background:rgba(253,43,43,.10);
-      border-radius:14px;
-    }
+
+    /* hide user avatar completely */
+    .me .avatar{ display:none; }
 
     .composer{
       flex:0 0 auto;
@@ -600,10 +597,11 @@
 
       const avatar = document.createElement("div");
       avatar.className = "avatar";
-      if(role === "user"){
-        avatar.textContent = "You";
-      }else{
+      if(role === "assistant"){
         avatar.innerHTML = `<img src="./isabelle.png" alt="Isabelle">`;
+      } else {
+        // keep element but it's hidden by css for user messages
+        avatar.textContent = "";
       }
 
       const bubble = document.createElement("div");
@@ -637,7 +635,7 @@
       const presets = [
         { label: "Ask Isabelle how to raise your rates", prompt: "How do I raise my rates without losing good clients?" },
         { label: "Ask Isabelle how to deal with time wasters", prompt: "How do I deal with time wasters and move men toward screening and a deposit?" },
-        { label: "Ask Isabelle to help planning a photoshoot", prompt: "Help me plan a photoshoot that attracts my ideal clients. What should I shoot, what vibe should I go for, and what should I avoid?" },
+        { label: "Ask Isabelle to help plan a photoshoot", prompt: "Help me plan a photoshoot that attracts my ideal clients. What should I shoot, what vibe should I go for, and what should I avoid?" },
       ];
 
       quickActionsEl.innerHTML = "";
@@ -896,6 +894,7 @@
   </script>
 </body>
 </html>
+
 
 
 
