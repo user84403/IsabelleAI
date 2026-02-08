@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Isabelle AI Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="font-family:system-ui;background:#070A0F;color:#E9EEFF;padding:20px">
+
+<h2>Isabelle AI – Admin</h2>
+
+<div>
+  <input id="email" placeholder="email" style="padding:10px;width:260px"><br><br>
+  <input id="password" type="password" placeholder="password" style="padding:10px;width:260px"><br><br>
+  <button id="login">login</button>
+  <button id="logout" disabled>logout</button>
+</div>
+
+<hr>
+
+<div>
+  <button id="enqueue" disabled>enqueue coaching calls</button>
+  <button id="process" disabled>process next 10</button>
+</div>
+
+<pre id="log" style="margin-top:20px;white-space:pre-wrap"></pre>
+
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+  const SUPABASE_URL = "https://mzccaacasiuvixvhscrt.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
+
+  const ENQUEUE_URL =
+    "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/enqueue_calls";
+  const PROCESS_URL =
+    "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/process_calls";
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const log = (t) => document.getElementById("log").textContent = t;
+
+  async function token() {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token;
+  }
+
+  document.getElementById("login").onclick = async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return log(error.message);
+
+    document.getElementById("logout").disabled = false;
+    document.getElementById("enqueue").disabled = false;
+    document.getElementById("process").disabled = false;
+    log("logged in");
+  };
+
+  document.getElementById("logout").onclick = async () => {
+    await supabase.auth.signOut();
+    log("logged out");
+  };
+
+  document.getElementById("enqueue").onclick = async () => {
+    log("enqueuing...");
+    const res = await fetch(ENQUEUE_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + await token(),
+        "apikey": SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ bucket: "coaching-calls" })
+    });
+    log(JSON.stringify(await res.json(), null, 2));
+  };
+
+  document.getElementById("process").onclick = async () => {
+    log("processing...");
+    const res = await fetch(PROCESS_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + await token(),
+        "apikey": SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ batchSize: 10 })
+    });
+    log(JSON.stringify(await res.json(), null, 2));
+  };
+</script>
+
+</body>
+</html>
