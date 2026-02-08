@@ -1,725 +1,277 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Isabelle AI</title>
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  <style>
-    :root{
-      --accent:#FD2B2B;
-      --accent2:#ff4d4d;
-      --shadow: 0 18px 60px rgba(0,0,0,.18);
-      --radius:18px;
+  const SUPABASE_URL = "https://mzccaacasiuvixvhscrt.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
 
-      --bg:#070A0F;
-      --panel:#0B1020;
-      --border:#1B2440;
-      --text:#E9EEFF;
-      --muted:#A7B0D6;
+  const CHAT_ENDPOINT = SUPABASE_URL + "/functions/v1/chat";
 
-      --bgGlow1: rgba(253,43,43,.10);
-      --bgGlow2: rgba(255,255,255,.05);
-      --bgGlow3: rgba(253,43,43,.08);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      --status:#35d07f;
-      --inputBg: rgba(7,10,15,.55);
-      --bubbleBg: rgba(10,14,26,.75);
-      --bubbleMeBg: rgba(253,43,43,.08);
-      --bubbleMeBorder: rgba(253,43,43,.35);
+  const statusText = document.getElementById("statusText");
+
+  const loginView = document.getElementById("loginView");
+  const chatView = document.getElementById("chatView");
+
+  const logoutPill = document.getElementById("logoutPill");
+  const clearPill = document.getElementById("clearPill");
+
+  const emailEl = document.getElementById("email");
+  const passwordEl = document.getElementById("password");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginErr = document.getElementById("loginErr");
+  const loginOk = document.getElementById("loginOk");
+
+  const messagesEl = document.getElementById("messages");
+  const inputEl = document.getElementById("input");
+  const sendBtn = document.getElementById("send");
+  const clearChatEl = document.getElementById("clearChat");
+  const exportChatEl = document.getElementById("exportChat");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  const themeToggle = document.getElementById("themeToggle");
+  const themeLabel = document.getElementById("themeLabel");
+  const THEME_KEY = "isabelle_ai_theme";
+
+  const STORAGE_KEY = "isabelle_ai_chat_auth_v1";
+  let history = loadHistory();
+
+  function setStatus(t){ statusText.textContent = t; }
+
+  function setTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem(THEME_KEY, theme);
+    const isLight = theme === "light";
+    themeToggle.checked = isLight;
+    themeLabel.textContent = isLight ? "light" : "dark";
+  }
+
+  function initTheme(){
+    const saved = localStorage.getItem(THEME_KEY);
+    if(saved === "light" || saved === "dark"){ setTheme(saved); return; }
+    const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
+    setTheme(prefersLight ? "light" : "dark");
+  }
+
+  themeToggle.addEventListener("change", () => {
+    setTheme(themeToggle.checked ? "light" : "dark");
+  });
+
+  function showLogin(){
+    loginView.style.display = "block";
+    chatView.style.display = "none";
+    logoutPill.style.display = "none";
+    clearPill.style.display = "none";
+  }
+
+  function showChat(){
+    loginView.style.display = "none";
+    chatView.style.display = "flex";
+    logoutPill.style.display = "flex";
+    clearPill.style.display = "flex";
+  }
+
+  function addMessage(role, text){
+    const row = document.createElement("div");
+    row.className = "msg " + (role === "user" ? "me" : "bot");
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    if(role === "user"){
+      avatar.textContent = "You";
+    }else{
+      avatar.innerHTML = `<img src="./isabelle.png" alt="Isabelle">`;
     }
 
-    [data-theme="light"]{
-      --bg:#F6F7FB;
-      --panel:#FFFFFF;
-      --border:#E3E7F3;
-      --text:#0B1020;
-      --muted:#56607A;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
 
-      --bgGlow1: rgba(253,43,43,.08);
-      --bgGlow2: rgba(11,16,32,.04);
-      --bgGlow3: rgba(253,43,43,.06);
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
 
-      --status:#1ea45b;
-      --inputBg: rgba(255,255,255,.85);
-      --bubbleBg: rgba(246,247,251,.95);
-      --shadow: 0 18px 60px rgba(11,16,32,.10);
+  function saveHistory(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); }
+  function loadHistory(){
+    try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+    catch(e){ return []; }
+  }
+
+  function renderHistory(){
+    messagesEl.innerHTML = "";
+    if(history.length === 0){
+      const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
+      addMessage("assistant", hello);
+      history.push({ role:"assistant", content: hello });
+      saveHistory();
+      return;
+    }
+    for(const m of history){ addMessage(m.role, m.content); }
+  }
+
+  function autosize(){
+    inputEl.style.height = "0px";
+    inputEl.style.height = Math.min(160, inputEl.scrollHeight) + "px";
+  }
+
+  async function doLogin(){
+    loginErr.style.display = "none";
+    loginOk.style.display = "none";
+
+    const email = (emailEl.value || "").trim();
+    const password = (passwordEl.value || "").trim();
+
+    if(!email || !password){
+      loginErr.textContent = "please enter email and password";
+      loginErr.style.display = "block";
+      return;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%; margin:0;}
+    setStatus("logging in...");
+    loginBtn.disabled = true;
 
-    body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--text);
-      background:
-        radial-gradient(900px 600px at 15% 10%, var(--bgGlow1), transparent 60%),
-        radial-gradient(800px 500px at 85% 15%, var(--bgGlow2), transparent 55%),
-        radial-gradient(900px 700px at 50% 110%, var(--bgGlow3), transparent 60%),
-        var(--bg);
-      overflow:hidden;
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    .wrap{
-      height:100vh;
-      display:flex;
-      justify-content:center;
-      padding:28px 18px;
-    }
+    loginBtn.disabled = false;
 
-    .chat-shell{
-      width:min(980px, 100%);
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      min-height:0;
-    }
-
-    header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      padding:12px 6px;
-      flex:0 0 auto;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .brandpic{
-      width:44px;
-      height:44px;
-      border-radius:50%;
-      object-fit:cover;
-      object-position:center 18%;
-      border:1px solid var(--border);
-      box-shadow: 0 14px 34px rgba(0,0,0,.25);
-      flex:0 0 auto;
-    }
-
-    h1{ font-size:20px; margin:0; font-weight:700; }
-    .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
-
-    .meta{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      color:var(--muted);
-      font-size:13px;
-      flex:0 0 auto;
-    }
-
-    .pill{
-      padding:8px 10px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      border-radius:999px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      white-space:nowrap;
-    }
-    [data-theme="light"] .pill{ background:rgba(11,16,32,.03); }
-
-    .statusdot{
-      width:8px;height:8px;border-radius:50%;
-      background:var(--status);
-      box-shadow:0 0 18px rgba(53,208,127,.25);
-    }
-
-    .toggle{ display:flex; align-items:center; gap:8px; user-select:none; }
-    .toggle input{
-      appearance:none;
-      width:44px;
-      height:26px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.05);
-      position:relative;
-      cursor:pointer;
-      transition:.2s ease;
-    }
-    [data-theme="light"] .toggle input{ background:rgba(11,16,32,.05); }
-    .toggle input::after{
-      content:"";
-      position:absolute;
-      top:3px; left:3px;
-      width:20px; height:20px;
-      border-radius:50%;
-      background:var(--text);
-      opacity:.9;
-      transition:.2s ease;
-    }
-    .toggle input:checked{
-      border-color: rgba(253,43,43,.55);
-      box-shadow:0 0 0 4px rgba(253,43,43,.10);
-    }
-    .toggle input:checked::after{ left:21px; background:white; }
-
-    .panel{
-      flex:1 1 auto;
-      min-height:0;
-      border:1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      border-radius:18px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-    [data-theme="light"] .panel{
-      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
-    }
-
-    .messages{
-      flex:1 1 auto;
-      min-height:0;
-      padding:18px;
-      overflow:auto;
-      overscroll-behavior: contain;
-    }
-
-    .msg{
-      display:flex;
-      gap:10px;
-      margin:12px 0;
-      align-items:flex-start;
-    }
-
-    .avatar{
-      width:36px;height:36px;border-radius:50%;
-      border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;
-      background:rgba(255,255,255,.03);
-      overflow:hidden;
-      flex:0 0 auto;
-      font-weight:700;
-      font-size:12px;
-      color:var(--muted);
-    }
-    [data-theme="light"] .avatar{ background:rgba(11,16,32,.03); }
-    .avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      object-position:center 18%;
-      border-radius:50%;
-      display:block;
-    }
-
-    .bubble{
-      max-width:78ch;
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:12px 14px;
-      background:var(--bubbleBg);
-      line-height:1.35;
-      white-space:pre-wrap;
-      word-wrap:break-word;
-    }
-
-    .me{ flex-direction:row-reverse; }
-    .me .bubble{ background:var(--bubbleMeBg); border-color:var(--bubbleMeBorder); }
-    .me .avatar{
-      color:#ffd4d4;
-      border-color:var(--bubbleMeBorder);
-      background:rgba(253,43,43,.10);
-      border-radius:14px;
-    }
-
-    .composer{
-      flex:0 0 auto;
-      border-top:1px solid var(--border);
-      background:rgba(0,0,0,.10);
-      padding:14px;
-      display:flex;
-      gap:10px;
-      align-items:flex-end;
-    }
-    [data-theme="light"] .composer{ background:rgba(11,16,32,.03); }
-
-    textarea{
-      width:100%;
-      min-height:52px;
-      max-height:160px;
-      resize:none;
-      padding:12px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:var(--inputBg);
-      color:var(--text);
-      outline:none;
-      line-height:1.35;
-      font-size:14px;
-    }
-    textarea:focus{
-      border-color: rgba(253,43,43,.55);
-      box-shadow:0 0 0 4px rgba(253,43,43,.10);
-    }
-
-    button{
-      flex:0 0 auto;
-      border:0;
-      border-radius:14px;
-      padding:12px 16px;
-      background: linear-gradient(180deg, var(--accent2), var(--accent));
-      color:white;
-      font-weight:800;
-      cursor:pointer;
-      box-shadow: 0 14px 34px rgba(253,43,43,.22);
-      white-space:nowrap;
-    }
-    button:disabled{opacity:.6; cursor:not-allowed;}
-
-    .row2{
-      flex:0 0 auto;
-      display:flex;
-      justify-content:space-between;
-      padding:0 14px 14px 14px;
-      color:var(--muted);
-      font-size:12px;
-      gap:14px;
-      background:transparent;
-    }
-
-    .smalllink{
-      color:var(--muted);
-      text-decoration:none;
-      border-bottom:1px dotted rgba(167,176,214,.35);
-    }
-    .smalllink:hover{ color:var(--text); }
-
-    .center{
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .card{
-      width:min(520px, 100%);
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-      box-shadow: var(--shadow);
-      padding:22px;
-    }
-    [data-theme="light"] .card{
-      background: linear-gradient(180deg, rgba(11,16,32,.02), rgba(11,16,32,.01));
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin-top:14px;
-    }
-    .label{ font-size:13px; color:var(--muted); }
-    .input{
-      border:1px solid var(--border);
-      background:var(--inputBg);
-      color:var(--text);
-      border-radius:14px;
-      padding:12px;
-      outline:none;
-      font-size:14px;
-    }
-    .input:focus{
-      border-color: rgba(253,43,43,.55);
-      box-shadow:0 0 0 4px rgba(253,43,43,.10);
-    }
-    .err{ margin-top:12px; color:#ffb3b3; font-size:13px; white-space:pre-wrap; }
-    .ok{ margin-top:12px; color:#b7ffd3; font-size:13px; white-space:pre-wrap; }
-
-    @media (max-width:640px){
-      header{flex-direction:column; align-items:flex-start}
-      .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
-      .wrap{padding:18px 12px}
-      .bubble{max-width:46ch}
-    }
-  </style>
-</head>
-
-<body>
-  <div class="wrap">
-    <div class="chat-shell">
-      <header>
-        <div class="brand">
-          <img class="brandpic" src="./isabelle.png" alt="Isabelle">
-          <div>
-            <h1>Isabelle AI</h1>
-            <div class="sub">Ask anything about the program</div>
-          </div>
-        </div>
-
-        <div class="meta">
-          <div class="pill">
-            <span class="statusdot"></span>
-            <span id="statusText">ready</span>
-          </div>
-
-          <div class="pill toggle" title="toggle light/dark">
-            <span id="themeLabel">dark</span>
-            <input id="themeToggle" type="checkbox" aria-label="toggle theme" />
-          </div>
-
-          <div class="pill" id="logoutPill" style="display:none;">
-            <a class="smalllink" href="#" id="logoutBtn">logout</a>
-          </div>
-
-          <div class="pill" id="clearPill" style="display:none;">
-            <a class="smalllink" href="#" id="clearChat">clear chat</a>
-          </div>
-        </div>
-      </header>
-
-      <section class="panel" id="loginView" style="display:none;">
-        <div class="center">
-          <div class="card">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <img class="brandpic" src="./isabelle.png" alt="Isabelle" style="width:54px;height:54px;">
-              <div>
-                <div style="font-size:18px; font-weight:800;">login required</div>
-                <div class="sub">use the credentials you were given</div>
-              </div>
-            </div>
-
-            <div class="field">
-              <div class="label">email</div>
-              <input class="input" id="email" type="email" autocomplete="email" placeholder="name@email.com">
-            </div>
-
-            <div class="field">
-              <div class="label">password</div>
-              <input class="input" id="password" type="password" autocomplete="current-password" placeholder="••••••••">
-            </div>
-
-            <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
-              <button id="loginBtn">Login</button>
-              <div class="sub" id="loginHint" style="margin:0;">invite only</div>
-            </div>
-
-            <div class="err" id="loginErr" style="display:none;"></div>
-            <div class="ok" id="loginOk" style="display:none;"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel" id="chatView" style="display:none;">
-        <div class="messages" id="messages"></div>
-
-        <div class="composer">
-          <textarea id="input" placeholder="Type your question here..."></textarea>
-          <button id="send">Send</button>
-        </div>
-
-        <div class="row2">
-          <div class="hint">enter to send • shift+enter for a new line</div>
-          <div><a class="smalllink" href="#" id="exportChat">export</a></div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-    const SUPABASE_URL = "https://mzccaacasiuvixvhscrt.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16Y2NhYWNhc2l1dml4dmhzY3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MTQyNzEsImV4cCI6MjA4NTk5MDI3MX0.CteAnSaurF9ZTHORrJEsCLntaaD2XLj_sycQM4BvLrA";
-    const CHAT_ENDPOINT = "https://mzccaacasiuvixvhscrt.supabase.co/functions/v1/chat";
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const statusText = document.getElementById("statusText");
-
-    const loginView = document.getElementById("loginView");
-    const chatView = document.getElementById("chatView");
-
-    const logoutPill = document.getElementById("logoutPill");
-    const clearPill = document.getElementById("clearPill");
-
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginErr = document.getElementById("loginErr");
-    const loginOk = document.getElementById("loginOk");
-
-    const messagesEl = document.getElementById("messages");
-    const inputEl = document.getElementById("input");
-    const sendBtn = document.getElementById("send");
-    const clearChatEl = document.getElementById("clearChat");
-    const exportChatEl = document.getElementById("exportChat");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    const themeToggle = document.getElementById("themeToggle");
-    const themeLabel = document.getElementById("themeLabel");
-    const THEME_KEY = "isabelle_ai_theme";
-
-    const STORAGE_KEY = "isabelle_ai_chat_auth_v1";
-    let history = loadHistory();
-
-    function setStatus(t){ statusText.textContent = t; }
-
-    function setTheme(theme){
-      document.documentElement.setAttribute("data-theme", theme);
-      localStorage.setItem(THEME_KEY, theme);
-      const isLight = theme === "light";
-      themeToggle.checked = isLight;
-      themeLabel.textContent = isLight ? "light" : "dark";
-    }
-
-    function initTheme(){
-      const saved = localStorage.getItem(THEME_KEY);
-      if(saved === "light" || saved === "dark"){ setTheme(saved); return; }
-      const prefersLight = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches;
-      setTheme(prefersLight ? "light" : "dark");
-    }
-
-    themeToggle.addEventListener("change", () => {
-      setTheme(themeToggle.checked ? "light" : "dark");
-    });
-
-    function showLogin(){
-      loginView.style.display = "block";
-      chatView.style.display = "none";
-      logoutPill.style.display = "none";
-      clearPill.style.display = "none";
-    }
-
-    function showChat(){
-      loginView.style.display = "none";
-      chatView.style.display = "flex";
-      logoutPill.style.display = "flex";
-      clearPill.style.display = "flex";
-    }
-
-    function escapeHtml(s){
-      return s
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;")
-        .replace(/'/g,"&#039;");
-    }
-
-    function renderBasicMarkdown(s){
-      const safe = escapeHtml(s);
-      const bolded = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-      return bolded.replace(/\n/g, "<br>");
-    }
-
-    function addMessage(role, text){
-      const row = document.createElement("div");
-      row.className = "msg " + (role === "user" ? "me" : "bot");
-
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      if(role === "user"){
-        avatar.textContent = "You";
-      }else{
-        avatar.innerHTML = `<img src="./isabelle.png" alt="Isabelle">`;
-      }
-
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-
-      if(role === "assistant"){
-        bubble.innerHTML = renderBasicMarkdown(text);
-      } else {
-        bubble.textContent = text;
-      }
-
-      row.appendChild(avatar);
-      row.appendChild(bubble);
-      messagesEl.appendChild(row);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
-
-    function saveHistory(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); }
-    function loadHistory(){
-      try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
-      catch(e){ return []; }
-    }
-
-    function renderHistory(){
-      messagesEl.innerHTML = "";
-      if(history.length === 0){
-        const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
-        addMessage("assistant", hello);
-        history.push({ role:"assistant", content: hello });
-        saveHistory();
-        return;
-      }
-      for(const m of history){ addMessage(m.role, m.content); }
-    }
-
-    function autosize(){
-      inputEl.style.height = "0px";
-      inputEl.style.height = Math.min(160, inputEl.scrollHeight) + "px";
-    }
-
-    async function doLogin(){
-      loginErr.style.display = "none";
-      loginOk.style.display = "none";
-
-      const email = (emailEl.value || "").trim();
-      const password = (passwordEl.value || "").trim();
-
-      if(!email || !password){
-        loginErr.textContent = "please enter email and password";
-        loginErr.style.display = "block";
-        return;
-      }
-
-      setStatus("logging in...");
-      loginBtn.disabled = true;
-
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-      loginBtn.disabled = false;
-
-      if(error){
-        setStatus("ready");
-        loginErr.textContent = error.message;
-        loginErr.style.display = "block";
-        return;
-      }
-
-      loginOk.textContent = "logged in";
-      loginOk.style.display = "block";
+    if(error){
       setStatus("ready");
-
-      showChat();
-      renderHistory();
-      autosize();
-      inputEl.focus();
+      loginErr.textContent = error.message;
+      loginErr.style.display = "block";
+      return;
     }
 
-    loginBtn.addEventListener("click", doLogin);
-    passwordEl.addEventListener("keydown", (e) => {
-      if(e.key === "Enter"){ doLogin(); }
-    });
+    loginOk.textContent = "logged in";
+    loginOk.style.display = "block";
+    setStatus("ready");
 
-    logoutBtn.addEventListener("click", async (e) => {
-      e.preventDefault();
+    showChat();
+    renderHistory();
+    autosize();
+    inputEl.focus();
+  }
+
+  loginBtn.addEventListener("click", doLogin);
+  passwordEl.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){ doLogin(); }
+  });
+
+  logoutBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await supabase.auth.signOut();
+    showLogin();
+  });
+
+  clearChatEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    history = [];
+    saveHistory();
+    renderHistory();
+  });
+
+  exportChatEl.addEventListener("click", (e) => {
+    e.preventDefault();
+    const blob = new Blob([JSON.stringify(history, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "isabelle-ai-chat.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  async function send(){
+    const { data: sessionData, error: sessErr } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+
+    if(sessErr || !accessToken){
+      addMessage("assistant", "session expired, please log in again");
       await supabase.auth.signOut();
       showLogin();
-    });
+      return;
+    }
 
-    clearChatEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      history = [];
-      saveHistory();
-      renderHistory();
-    });
+    const text = inputEl.value.trim();
+    if(!text) return;
 
-    exportChatEl.addEventListener("click", (e) => {
-      e.preventDefault();
-      const blob = new Blob([JSON.stringify(history, null, 2)], { type:"application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "isabelle-ai-chat.json";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    });
+    inputEl.value = "";
+    autosize();
 
-    async function send(){
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData?.session?.access_token;
+    addMessage("user", text);
+    history.push({ role:"user", content:text });
+    saveHistory();
 
-      if(!accessToken){
-        addMessage("assistant", "session expired, please log in again");
-        await supabase.auth.signOut();
-        showLogin();
-        return;
-      }
+    sendBtn.disabled = true;
+    setStatus("thinking...");
 
-      const text = inputEl.value.trim();
-      if(!text) return;
+    const payload = {
+      messages: history.map(m => ({
+        role: m.role,
+        content: m.content
+      }))
+    };
 
-      inputEl.value = "";
-      autosize();
+    try{
+      const res = await fetch(CHAT_ENDPOINT, {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "apikey": SUPABASE_ANON_KEY,
+          // ✅ IMPORTANT: send the USER jwt here
+          "Authorization": `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(payload)
+      });
 
-      addMessage("user", text);
-      history.push({ role:"user", content:text });
-      saveHistory();
-
-      sendBtn.disabled = true;
-      setStatus("thinking...");
-
-      const payload = {
-        messages: history.map(m => ({ role: m.role, content: m.content }))
-      };
-
-      try{
-        const res = await fetch(CHAT_ENDPOINT, {
-          method:"POST",
-          headers:{
-            "Content-Type":"application/json",
-            "apikey": SUPABASE_ANON_KEY,
-
-            // IMPORTANT: keep anon jwt in Authorization so the edge gateway always accepts it
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-
-            // pass the real user jwt separately (optional, for later)
-            "x-user-jwt": accessToken
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if(!res.ok){
-          const err = await res.text();
-          const msg = `server error ${res.status}\n${err}`;
-          addMessage("assistant", msg);
-          history.push({ role:"assistant", content: msg });
-          saveHistory();
-          return;
-        }
-
-        const data = await res.json();
-        const reply = data?.reply || "(no reply)";
-        addMessage("assistant", reply);
-        history.push({ role:"assistant", content: reply });
-        saveHistory();
-      }catch(e){
-        const msg = "network error calling the chat endpoint";
+      if(!res.ok){
+        const err = await res.text();
+        const msg = `server error ${res.status}\n${err}`;
         addMessage("assistant", msg);
         history.push({ role:"assistant", content: msg });
         saveHistory();
-      }finally{
-        sendBtn.disabled = false;
-        setStatus("ready");
+        return;
       }
+
+      const data = await res.json();
+      const reply = data?.reply || "(no reply)";
+      addMessage("assistant", reply);
+      history.push({ role:"assistant", content: reply });
+      saveHistory();
+    }catch(e){
+      // this catches CORS failures + real network failures
+      const msg = "network error calling the chat endpoint";
+      addMessage("assistant", msg);
+      history.push({ role:"assistant", content: msg });
+      saveHistory();
+    }finally{
+      sendBtn.disabled = false;
+      setStatus("ready");
     }
+  }
 
-    sendBtn.addEventListener("click", send);
-    inputEl.addEventListener("input", autosize);
-    inputEl.addEventListener("keydown", (e) => {
-      if(e.key === "Enter" && !e.shiftKey){
-        e.preventDefault();
-        send();
-      }
-    });
-
-    initTheme();
-    setStatus("ready");
-
-    const { data: sessionData } = await supabase.auth.getSession();
-    if(sessionData?.session){
-      showChat();
-      renderHistory();
-      autosize();
-    } else {
-      showLogin();
+  sendBtn.addEventListener("click", send);
+  inputEl.addEventListener("input", autosize);
+  inputEl.addEventListener("keydown", (e) => {
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      send();
     }
-  </script>
-</body>
-</html>
+  });
 
+  initTheme();
+  setStatus("ready");
 
+  const { data: sessionData } = await supabase.auth.getSession();
+  if(sessionData?.session){
+    showChat();
+    renderHistory();
+    autosize();
+  } else {
+    showLogin();
+  }
+</script>
