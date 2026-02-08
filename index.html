@@ -102,7 +102,8 @@
       flex:0 0 auto;
     }
 
-    h1{ font-size:24px; margin:0; font-weight:800; letter-spacing:.2px; }
+    /* bigger title */
+    h1{ font-size:24px; margin:0; font-weight:800; letter-spacing:-.2px; }
     .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
 
     .meta{
@@ -183,76 +184,6 @@
       overflow:auto;
       overscroll-behavior: contain;
       position:relative;
-    }
-
-    /* ✅ quick questions centered in the empty area */
-    .quick-center{
-      width:100%;
-      display:flex;
-      justify-content:center;
-      margin:26px 0 0 0;
-    }
-
-    .quick-wrap{
-      width:min(720px, 92%);
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: rgba(255,255,255,.02);
-      padding:18px;
-      box-shadow: 0 18px 55px rgba(0,0,0,.10);
-    }
-    [data-theme="light"] .quick-wrap{ background: rgba(11,16,32,.02); }
-
-    .quick-title{
-      font-size:12px;
-      color:var(--muted);
-      margin:0 0 12px 0;
-    }
-
-    .quick-grid{
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      gap:12px;
-    }
-
-    /* ✅ more seamless pills */
-    .quick-btn{
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color: var(--text);
-      padding:11px 14px;
-      border-radius:999px;
-      font-size:13px;
-      cursor:pointer;
-      transition:.15s ease;
-      box-shadow:none;
-    }
-    [data-theme="light"] .quick-btn{
-      border:1px solid rgba(11,16,32,.10);
-      background: rgba(11,16,32,.03);
-    }
-    .quick-btn:hover{
-      transform: translateY(-1px);
-      border-color: rgba(253,43,43,.35);
-      background: rgba(253,43,43,.06);
-    }
-
-    /* ✅ inline loading status where you marked red */
-    .inline-status{
-      margin:6px 0 2px 46px; /* aligns under bot bubble (avatar 36 + gap 10) */
-      font-size:12px;
-      color:var(--muted);
-      opacity:.95;
-      user-select:none;
-    }
-    .inline-status .dot{
-      display:inline-block;
-      width:6px;height:6px;border-radius:50%;
-      background: var(--status);
-      margin-right:8px;
-      box-shadow:0 0 14px rgba(53,208,127,.25);
-      transform: translateY(-1px);
     }
 
     .msg{
@@ -347,7 +278,7 @@
     }
     button:disabled{opacity:.6; cursor:not-allowed;}
 
-    /* ✅ bottom hint smaller, more subtle */
+    /* bottom hint smaller + subtle, export removed */
     .row2{
       flex:0 0 auto;
       display:flex;
@@ -355,9 +286,9 @@
       padding:0 14px 12px 14px;
       color:var(--muted);
       font-size:11px;
-      opacity:.55;
       gap:14px;
       background:transparent;
+      opacity:.55;
     }
 
     .smalllink{
@@ -407,13 +338,63 @@
     .err{ margin-top:12px; color:#ffb3b3; font-size:13px; white-space:pre-wrap; }
     .ok{ margin-top:12px; color:#b7ffd3; font-size:13px; white-space:pre-wrap; }
 
+    /* typing line under first bubble */
+    .typing-line{
+      margin:6px 0 0 46px;
+      font-size:13px;
+      color:var(--muted);
+      opacity:.9;
+      user-select:none;
+    }
+
+    /* centered quick chips */
+    .quick-actions{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      padding:44px 18px 18px 18px;
+    }
+
+    .quick-chip{
+      border:1px solid rgba(167,176,214,.35);
+      background:rgba(255,255,255,.02);
+      color:var(--text);
+      padding:16px 18px;
+      border-radius:18px;
+      cursor:pointer;
+      font-size:18px;
+      line-height:1.25;
+      max-width:340px;
+      text-align:left;
+      box-shadow:none;
+      transition:transform .12s ease, border-color .12s ease, background .12s ease, opacity .12s ease;
+      opacity:.85;
+      font-weight:600;
+    }
+
+    [data-theme="light"] .quick-chip{
+      background:rgba(11,16,32,.02);
+      border-color:rgba(86,96,122,.25);
+    }
+
+    .quick-chip:hover{
+      transform:translateY(-1px);
+      border-color:rgba(253,43,43,.35);
+      background:rgba(253,43,43,.04);
+      opacity:1;
+    }
+
+    .quick-chip:active{ transform:translateY(0px); }
+
     @media (max-width:640px){
       header{flex-direction:column; align-items:flex-start}
       .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
       .wrap{padding:18px 12px}
       .bubble{max-width:46ch}
-      h1{ font-size:22px; }
-      .inline-status{ margin-left:0; }
+      .quick-chip{ font-size:16px; max-width:100%; }
     }
   </style>
 </head>
@@ -484,7 +465,10 @@
       </section>
 
       <section class="panel" id="chatView" style="display:none;">
-        <div class="messages" id="messages"></div>
+        <div class="messages" id="messages">
+          <div id="quickActions" class="quick-actions" style="display:none;"></div>
+          <div id="typingLine" class="typing-line" style="display:none;"></div>
+        </div>
 
         <div class="composer">
           <textarea id="input" placeholder="Type your question here..."></textarea>
@@ -527,14 +511,15 @@
     const clearChatEl = document.getElementById("clearChat");
     const logoutBtn = document.getElementById("logoutBtn");
 
+    const quickActionsEl = document.getElementById("quickActions");
+    const typingLineEl = document.getElementById("typingLine");
+
     const themeToggle = document.getElementById("themeToggle");
     const themeLabel = document.getElementById("themeLabel");
     const THEME_KEY = "isabelle_ai_theme";
 
     const STORAGE_KEY = "isabelle_ai_chat_auth_v1";
     let history = loadHistory();
-
-    let loadingTimer = null;
 
     function setStatus(t){ statusText.textContent = t; }
 
@@ -619,78 +604,71 @@
       catch(e){ return []; }
     }
 
-    function clearInlineStatus(){
-      const s = document.getElementById("inlineStatus");
-      if(s) s.remove();
+    function showTypingLine(text){
+      typingLineEl.textContent = text;
+      typingLineEl.style.display = "block";
     }
 
-    function showInlineStatus(text){
-      clearInlineStatus();
-      const s = document.createElement("div");
-      s.className = "inline-status";
-      s.id = "inlineStatus";
-      s.innerHTML = `<span class="dot"></span>${escapeHtml(text)}`;
-      messagesEl.appendChild(s);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+    function hideTypingLine(){
+      typingLineEl.style.display = "none";
+      typingLineEl.textContent = "";
     }
 
-    function renderQuickQuestions(){
-      const hasUserMsg = history.some(m => m.role === "user");
-      const existing = document.getElementById("quickCenter");
-      if(existing) existing.remove();
+    function showQuickActions(){
+      quickActionsEl.style.display = "flex";
+    }
 
-      if(hasUserMsg) return;
+    function hideQuickActions(){
+      quickActionsEl.style.display = "none";
+      quickActionsEl.innerHTML = "";
+    }
 
-      const center = document.createElement("div");
-      center.className = "quick-center";
-      center.id = "quickCenter";
+    function buildQuickActions(){
+      const presets = [
+        { label: "Ask Isabelle how to raise your rates", prompt: "How do I raise my rates without losing good clients?" },
+        { label: "Ask Isabelle how to deal with time wasters", prompt: "How do I deal with time wasters and move men toward screening and a deposit?" },
+        { label: "Ask Isabelle to help planning a photoshoot", prompt: "Help me plan a photoshoot that attracts my ideal clients. What should I shoot, what vibe should I go for, and what should I avoid?" },
+      ];
 
-      center.innerHTML = `
-        <div class="quick-wrap">
-          <div class="quick-title">Try one of these:</div>
-          <div class="quick-grid">
-            <button class="quick-btn" data-q="I want to raise my rates. Ask me 3 quick questions first (my current rate, my demand, and what I’m currently offering), then tell me exactly how to raise it without losing good clients.">Ask Isabelle how to raise your rates</button>
-            <button class="quick-btn" data-q="Help me deal with time wasters. Ask me what platform I’m using and what kind of messages I’m getting, then give me a short exact message flow that moves them to screening and deposit fast.">Ask Isabelle how to deal with time wasters</button>
-            <button class="quick-btn" data-q="Help me plan a photoshoot for my ad. Before you give the plan, ask me what vibe I’m selling (GFE or PSE), my target client type, and where I’m posting. Then give me a shot list, outfit ideas, and a simple prep checklist.">Ask Isabelle to help planning a photoshoot</button>
-          </div>
-        </div>
-      `;
+      quickActionsEl.innerHTML = "";
 
-      // place it after the first assistant hello message (so it sits in the center area you marked)
-      // if there is no message yet, prepend
-      const firstBubble = messagesEl.querySelector(".msg");
-      if(firstBubble){
-        // after hello message
-        firstBubble.insertAdjacentElement("afterend", center);
-      }else{
-        messagesEl.prepend(center);
-      }
-
-      center.querySelectorAll(".quick-btn").forEach(btn => {
+      for(const p of presets){
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "quick-chip";
+        btn.textContent = p.label;
         btn.addEventListener("click", () => {
-          const q = btn.getAttribute("data-q") || "";
-          inputEl.value = q;
+          inputEl.value = p.prompt;
           autosize();
+          hideQuickActions();
           inputEl.focus();
           send();
         });
-      });
+        quickActionsEl.appendChild(btn);
+      }
     }
 
     function renderHistory(){
       messagesEl.innerHTML = "";
-      clearInlineStatus();
+      messagesEl.appendChild(quickActionsEl);
+      messagesEl.appendChild(typingLineEl);
 
       if(history.length === 0){
         const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
         addMessage("assistant", hello);
         history.push({ role:"assistant", content: hello });
         saveHistory();
-      }else{
-        for(const m of history){ addMessage(m.role, m.content); }
+
+        buildQuickActions();
+        showQuickActions();
+        hideTypingLine();
+        return;
       }
 
-      renderQuickQuestions();
+      hideQuickActions();
+      hideTypingLine();
+
+      for(const m of history){ addMessage(m.role, m.content); }
     }
 
     function autosize(){
@@ -753,20 +731,9 @@
       renderHistory();
     });
 
-    function startLoadingStatus(){
-      setStatus("loading...");
-      showInlineStatus("Looking through course material...");
-      if(loadingTimer) clearTimeout(loadingTimer);
-      loadingTimer = setTimeout(() => {
-        showInlineStatus("Isabelle is thinking...");
-      }, 900);
-    }
-
-    function stopLoadingStatus(){
-      if(loadingTimer) clearTimeout(loadingTimer);
-      loadingTimer = null;
-      setStatus("ready");
-      clearInlineStatus();
+    function lastAssistantWasHello(){
+      if(history.length === 0) return true;
+      return false;
     }
 
     async function send(){
@@ -789,12 +756,11 @@
       addMessage("user", text);
       history.push({ role:"user", content:text });
       saveHistory();
-
-      // remove quick questions after first user message
-      renderQuickQuestions();
+      hideQuickActions();
 
       sendBtn.disabled = true;
-      startLoadingStatus();
+      setStatus("thinking...");
+      showTypingLine("Looking through course material...");
 
       const payload = {
         messages: history.map(m => ({ role: m.role, content: m.content }))
@@ -832,7 +798,8 @@
         saveHistory();
       }finally{
         sendBtn.disabled = false;
-        stopLoadingStatus();
+        hideTypingLine();
+        setStatus("ready");
       }
     }
 
@@ -859,4 +826,5 @@
   </script>
 </body>
 </html>
+
 
