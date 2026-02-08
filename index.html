@@ -665,13 +665,11 @@
           headers:{
             "Content-Type":"application/json",
             "apikey": SUPABASE_ANON_KEY,
-
-            // IMPORTANT: keep anon jwt in Authorization so the edge gateway always accepts it
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-
-            // pass the real user jwt separately (optional, for later)
-            "x-user-jwt": accessToken
+          
+            // ✅ use the logged-in user's jwt
+            "Authorization": `Bearer ${accessToken}`
           },
+
           body: JSON.stringify(payload)
         });
 
