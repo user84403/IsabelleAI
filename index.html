@@ -540,6 +540,8 @@
     const THEME_KEY = "isabelle_ai_theme";
 
     const STORAGE_KEY = "isabelle_ai_chat_auth_v1";
+    const HELLO_TEXT = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
+
     let history = loadHistory();
 
     function setStatus(t){ statusText.textContent = t; }
@@ -656,25 +658,40 @@
       }
     }
 
+    function shouldShowQuickActions(){
+      if(history.length === 0) return true;
+      if(history.length === 1 && history[0]?.role === "assistant" && (history[0]?.content || "") === HELLO_TEXT) return true;
+      return false;
+    }
+
+    function ensureHello(){
+      if(history.length === 0){
+        history.push({ role:"assistant", content: HELLO_TEXT });
+        saveHistory();
+      }
+      if(history.length >= 1 && history[0]?.role === "assistant" && typeof history[0]?.content === "string"){
+        if(history[0].content.trim() === "Hi, I'm Isabelle AI.\nAsk me anything about the program and I'll answer based on the course materials you have access to."){
+          history[0].content = HELLO_TEXT;
+          saveHistory();
+        }
+      }
+    }
+
     function renderHistory(){
       messagesEl.innerHTML = "";
       messagesEl.appendChild(quickActionsEl);
 
-      if(history.length === 0){
-        const hello = "Hi, I’m Isabelle AI.\nAsk me anything about the program and I’ll answer based on the course materials you have access to.";
-        addMessage("assistant", hello);
-        history.push({ role:"assistant", content: hello });
-        saveHistory();
-
-        buildQuickActions();
-        showQuickActions();
-        return;
-      }
-
-      hideQuickActions();
       removeLoadingLine();
+      ensureHello();
 
       for(const m of history){ addMessage(m.role, m.content); }
+
+      if(shouldShowQuickActions()){
+        buildQuickActions();
+        showQuickActions();
+      } else {
+        hideQuickActions();
+      }
     }
 
     function autosize(){
@@ -879,5 +896,6 @@
   </script>
 </body>
 </html>
+
 
 
