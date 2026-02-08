@@ -1,5 +1,3 @@
-.
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -104,7 +102,8 @@
       flex:0 0 auto;
     }
 
-    h1{ font-size:20px; margin:0; font-weight:700; }
+    /* ✅ title bigger */
+    h1{ font-size:24px; margin:0; font-weight:800; letter-spacing:.2px; }
     .sub{ font-size:13px; color:var(--muted); margin-top:3px; }
 
     .meta{
@@ -184,6 +183,42 @@
       padding:18px;
       overflow:auto;
       overscroll-behavior: contain;
+    }
+
+    /* ✅ quick questions */
+    .quick-wrap{
+      margin:8px 0 14px 0;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background: rgba(255,255,255,.02);
+    }
+    [data-theme="light"] .quick-wrap{ background: rgba(11,16,32,.02); }
+    .quick-title{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:10px;
+    }
+    .quick-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    .quick-btn{
+      border:1px solid var(--border);
+      background: rgba(253,43,43,.06);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:13px;
+      cursor:pointer;
+      transition:.15s ease;
+      box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    }
+    .quick-btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(253,43,43,.45);
+      box-shadow: 0 14px 34px rgba(253,43,43,.14);
     }
 
     .msg{
@@ -341,6 +376,7 @@
       .meta{width:100%; justify-content:space-between; flex-wrap:wrap}
       .wrap{padding:18px 12px}
       .bubble{max-width:46ch}
+      h1{ font-size:22px; }
     }
   </style>
 </head>
@@ -463,6 +499,8 @@
     const STORAGE_KEY = "isabelle_ai_chat_auth_v1";
     let history = loadHistory();
 
+    let loadingTimer = null;
+
     function setStatus(t){ statusText.textContent = t; }
 
     function setTheme(theme){
@@ -546,6 +584,40 @@
       catch(e){ return []; }
     }
 
+    function renderQuickQuestions(){
+      const hasUserMsg = history.some(m => m.role === "user");
+      const existing = document.getElementById("quickWrap");
+      if(existing) existing.remove();
+
+      if(hasUserMsg) return;
+
+      const wrap = document.createElement("div");
+      wrap.className = "quick-wrap";
+      wrap.id = "quickWrap";
+
+      wrap.innerHTML = `
+        <div class="quick-title">Try one of these:</div>
+        <div class="quick-grid">
+          <button class="quick-btn" data-q="How do I raise my rates without scaring off good clients?">Ask Isabelle how to raise your rates</button>
+          <button class="quick-btn" data-q="How do I deal with time wasters and move them to a deposit fast?">Ask Isabelle how to deal with time wasters</button>
+          <button class="quick-btn" data-q="Help me plan a photoshoot that fits a high-end brand. What shots do I need, and how do I prep?">Ask Isabelle to help planning a photoshoot</button>
+        </div>
+      `;
+
+      messagesEl.prepend(wrap);
+
+      wrap.querySelectorAll(".quick-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const q = btn.getAttribute("data-q") || "";
+          inputEl.value = q;
+          autosize();
+          inputEl.focus();
+          // optional: auto-send immediately
+          send();
+        });
+      });
+    }
+
     function renderHistory(){
       messagesEl.innerHTML = "";
       if(history.length === 0){
@@ -553,9 +625,10 @@
         addMessage("assistant", hello);
         history.push({ role:"assistant", content: hello });
         saveHistory();
-        return;
+      }else{
+        for(const m of history){ addMessage(m.role, m.content); }
       }
-      for(const m of history){ addMessage(m.role, m.content); }
+      renderQuickQuestions();
     }
 
     function autosize(){
@@ -631,6 +704,22 @@
       URL.revokeObjectURL(url);
     });
 
+    function startLoadingStatus(){
+      // phase 1 (immediate): retrieval vibe
+      setStatus("Looking through course material...");
+      // phase 2 (after ~900ms): thinking vibe
+      if(loadingTimer) clearTimeout(loadingTimer);
+      loadingTimer = setTimeout(() => {
+        setStatus("Isabelle is thinking...");
+      }, 900);
+    }
+
+    function stopLoadingStatus(){
+      if(loadingTimer) clearTimeout(loadingTimer);
+      loadingTimer = null;
+      setStatus("ready");
+    }
+
     async function send(){
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
@@ -652,8 +741,11 @@
       history.push({ role:"user", content:text });
       saveHistory();
 
+      // hide quick questions after first user message
+      renderQuickQuestions();
+
       sendBtn.disabled = true;
-      setStatus("thinking...");
+      startLoadingStatus();
 
       const payload = {
         messages: history.map(m => ({ role: m.role, content: m.content }))
@@ -665,11 +757,8 @@
           headers:{
             "Content-Type":"application/json",
             "apikey": SUPABASE_ANON_KEY,
-          
-            // ✅ use the logged-in user's jwt
             "Authorization": `Bearer ${accessToken}`
           },
-
           body: JSON.stringify(payload)
         });
 
@@ -694,7 +783,7 @@
         saveHistory();
       }finally{
         sendBtn.disabled = false;
-        setStatus("ready");
+        stopLoadingStatus();
       }
     }
 
